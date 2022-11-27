@@ -57,6 +57,12 @@ void gamek_platform_terminate(uint8_t status);
  */
 void gamek_platform_show_cursor(uint8_t show);
 
+/* Send a MIDI-like event to the synthesizer.
+ * I'm thinking platforms will supply synthesizers with hard-coded config.
+ * You get 9 instruments and 10 PCM banks, and we'll establish some convention around chid, eg channel 0 is a violin...
+ */
+void gamek_platform_audio_event(uint8_t chid,uint8_t opcode,uint8_t a,uint8_t b);
+
 /* Client hooks.
  * These are not part of the platform.
  * Your program must define (gamek_client), populated with the hooks for things you can do.
@@ -84,12 +90,6 @@ extern const struct gamek_client {
    */
   uint8_t (*render)(struct gamek_image *fb);
   
-  /* Platform is ready for more audio output.
-   * You must write (c) samples starting at (v) -- samples, not frames, not bytes.
-   * This may be called from an interrupt or a separate thread.
-   */
-  void (*generate_audio)(int16_t *v,uint16_t c);
-  
   /* Input state changed.
    * (btnid) will always be exactly one bit.
    * This is pretty much all you get; platforms are not required to track state for you.
@@ -97,6 +97,8 @@ extern const struct gamek_client {
    * The special button "CD" is Carrier Detect, means a device is present.
    */
   void (*input_event)(uint8_t playerid,uint16_t btnid,uint8_t value);
+  
+  //TODO consider removing the keyboard events, I don't think they're going to be helpful
   
   /* Raw keyboard input.
    * (keycode) is USB-HID, normally page 7.

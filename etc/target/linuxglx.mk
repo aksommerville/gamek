@@ -1,4 +1,4 @@
-linuxglx_OPT_ENABLE:=argv inmgr fs serial
+linuxglx_OPT_ENABLE:=argv inmgr fs serial akx11 alsapcm ossmidi evdev
 
 linuxglx_CCOPT:=-c -MMD -O3
 linuxglx_CCDEF:= \

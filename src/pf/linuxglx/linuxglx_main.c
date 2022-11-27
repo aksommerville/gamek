@@ -120,6 +120,14 @@ static void linuxglx_update() {
   }
 }
 
+/* Terminate per client request.
+ */
+ 
+void gamek_platform_terminate(uint8_t status) {
+  fprintf(stderr,"Client requests termination with status %d\n",status);
+  linuxglx.terminate++;
+}
+
 /* Main.
  */
  

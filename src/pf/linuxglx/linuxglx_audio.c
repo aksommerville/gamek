@@ -4,19 +4,9 @@
  */
  
 static void _cb_pcm(int16_t *v,int c,void *userdata) {
-  //TODO Consider removing the generate_audio hook. Expose a more event-oriented audio API to the app layer, not a PCM one.
-  if (!gamek_client.generate_audio) {
-    memset(v,0,c<<1);
-    return;
-  }
-  while (c>0xffff) {
-    gamek_client.generate_audio(v,0xffff);
-    v+=0xffff;
-    c-=0xffff;
-  }
-  if (c>0) {
-    gamek_client.generate_audio(v,c);
-  }
+  //TODO synthesizer
+  memset(v,0,c);
+  linuxglx.aframec+=c/alsapcm_get_chanc(linuxglx.alsapcm);
 }
 
 /* Init.
@@ -24,10 +14,6 @@ static void _cb_pcm(int16_t *v,int c,void *userdata) {
  
 int linuxglx_audio_init() {
   fprintf(stderr,"%s...\n",__func__);
-
-  if (!gamek_client.generate_audio) {
-    return 0;
-  }
 
   struct alsapcm_delegate delegate={
     .pcm_out=_cb_pcm,
@@ -43,6 +29,16 @@ int linuxglx_audio_init() {
     fprintf(stderr,"%s:WARNING: Failed to create ALSA context. Proceeding without audio.\n",linuxglx.exename);
     return 0;
   }
+  
+  //TODO synthesizer
 
   return 0;
+}
+
+/* Event from client.
+ */
+ 
+void gamek_platform_audio_event(uint8_t chid,uint8_t opcode,uint8_t a,uint8_t b) {
+  //TODO synthesizer
+  fprintf(stderr,"%s:%d:%s: %02x %02x %02x %02x\n",__FILE__,__LINE__,__func__,chid,opcode,a,b);
 }

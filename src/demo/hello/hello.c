@@ -31,6 +31,8 @@ struct gamek_image smile={
   .flags=GAMEK_IMAGE_FLAG_TRANSPARENT,
 };
 
+static uint8_t cursor_visible=0;
+
 /* Init.
  */
  
@@ -79,18 +81,6 @@ static uint8_t _hello_render(struct gamek_image *fb) {
   return 1;
 }
 
-/* Generate audio.
- */
- 
-static void _hello_generate_audio(int16_t *v,uint16_t c) {
-  if (0) {
-    // remove headphones
-    for (;c-->0;v++) *v=rand();
-  } else {
-    memset(v,0,c<<1);
-  }
-}
-
 /* Mapped player input.
  */
  
@@ -112,6 +102,10 @@ static uint8_t _hello_keyboard_input(uint32_t keycode,uint8_t value) {
 
 static void _hello_text_input(uint32_t codepoint) {
   fprintf(stderr,"%s U+%x\n",__func__,codepoint);
+  if (codepoint=='6') {
+    fprintf(stderr,"Terminating because you typed 6.\n");
+    gamek_platform_terminate(0);
+  }
 }
 
 /* Mouse events.
@@ -125,6 +119,15 @@ static void _hello_mouse_motion(int16_t x,int16_t y) {
 
 static void _hello_mouse_button(uint8_t btnid,uint8_t value) {
   fprintf(stderr,"%s %d.%d\n",__func__,btnid,value);
+  if ((btnid==1)&&value) {
+    if (cursor_visible) {
+      gamek_platform_show_cursor(0);
+      cursor_visible=0;
+    } else {
+      gamek_platform_show_cursor(1);
+      cursor_visible=1;
+    }
+  }
 }
 
 static void _hello_mouse_wheel(int16_t dx,int16_t dy) {
@@ -136,6 +139,7 @@ static void _hello_mouse_wheel(int16_t dx,int16_t dy) {
  
 static void _hello_midi_in(uint8_t chid,uint8_t opcode,uint8_t a,uint8_t b) {
   //fprintf(stderr,"%s[%02x] %02x %02x %02x\n",__func__,chid,opcode,a,b);
+  gamek_platform_audio_event(chid,opcode,a,b);
 }
 
 /* Client definition.
@@ -148,7 +152,6 @@ const struct gamek_client gamek_client={
   .init=_hello_init,
   .update=_hello_update,
   .render=_hello_render,
-  .generate_audio=_hello_generate_audio,
   .input_event=_hello_input_event,
   
   // Keyboards are optional. If you do text entry, it's good to support this:

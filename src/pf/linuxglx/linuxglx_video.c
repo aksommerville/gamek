@@ -126,3 +126,10 @@ int linuxglx_video_init() {
 int linuxglx_video_update() {
   return akx11_update(linuxglx.akx11);
 }
+
+/* Cursor.
+ */
+ 
+void gamek_platform_show_cursor(uint8_t show) {
+  akx11_show_cursor(linuxglx.akx11,show);
+}

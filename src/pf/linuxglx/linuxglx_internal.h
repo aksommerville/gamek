@@ -4,10 +4,10 @@
 #include "pf/gamek_pf.h"
 #include "common/gamek_image.h"
 #include "opt/inmgr/gamek_inmgr.h"
-#include "akx11/akx11.h"
-#include "evdev/evdev.h"
-#include "ossmidi/ossmidi.h"
-#include "alsapcm/alsapcm.h"
+#include "opt/akx11/akx11.h"
+#include "opt/evdev/evdev.h"
+#include "opt/ossmidi/ossmidi.h"
+#include "opt/alsapcm/alsapcm.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,6 +49,7 @@ extern struct linuxglx {
   struct ossmidi *ossmidi;
   struct alsapcm *alsapcm;
   struct gamek_inmgr *inmgr;
+  //TODO synthesizer
   
 } linuxglx;
 
