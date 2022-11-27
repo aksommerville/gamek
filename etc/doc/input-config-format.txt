@@ -1,0 +1,31 @@
+Gamek Input Config File Format
+
+Line-oriented text.
+'#' at start of line only, begins a line comment.
+
+Begin a device block with one line:
+>>> VID PID NAME
+
+Every other line is a button mapping.
+There must have been a device block introducer first.
+
+SRCBTNID DSTBTNID LO HI FLAGS
+
+SRCBTNID is an integer.
+
+DSTBTNID is an integer or one of these symbols:
+  LEFT RIGHT UP DOWN
+  SOUTH NORTH WEST EAST
+  L1 L2 R1 R2 AUX1 AUX2 AUX3
+  HAT
+  QUIT FULLSCREEN
+  
+LO,HI are the inclusive edge values.
+A 3-state axis should have two rules, one for the low range and one for the high.
+
+FLAGS are space-delimited tokens:
+  ACTION       DSTBTNID names an action, not a button. Usually implied by the DSTBTNID token.
+  LOWPRIORITY  Don't advance playerid_next. Add to every rule if you want it.
+  PLAYER2      Rule applies to a second player using the same device. (but no more than 2)
+  USAGE        SRCBTNID is the USB-HID Usage code, not the hardware button ID.
+  CRITICAL     Reject a device if it doesn't match this button. Usually we use fuzzier heuristics.
