@@ -126,52 +126,6 @@ static void _hello_input_event(uint8_t playerid,uint16_t btnid,uint8_t value) {
   }
 }
 
-/* Keyboard input.
- * It's unusual for a game to want this.
- * Keys may be mapped to other actions by the platform layer; you can't control that.
- * If eg "wasd" are mapped to a d-pad, you won't be able to receive them as text.
- * If you take text input, do it console style: Present a table of letters for the user to pick from.
- */
- 
-static uint8_t _hello_keyboard_input(uint32_t keycode,uint8_t value) {
-  //fprintf(stderr,"%s %08x=%d\n",__func__,keycode,value);
-  return 0; // nonzero to ack
-}
-
-static void _hello_text_input(uint32_t codepoint) {
-  fprintf(stderr,"%s U+%x\n",__func__,codepoint);
-  if (codepoint=='6') {
-    fprintf(stderr,"Terminating because you typed 6.\n");
-    gamek_platform_terminate(0);
-  }
-}
-
-/* Mouse events.
- * Like keyboard, this is exotic for gamek games.
- * Not all supported platforms can even supply mouse events.
- */
- 
-static void _hello_mouse_motion(int16_t x,int16_t y) {
-  //fprintf(stderr,"%s %d,%d\n",__func__,x,y);
-}
-
-static void _hello_mouse_button(uint8_t btnid,uint8_t value) {
-  fprintf(stderr,"%s %d.%d\n",__func__,btnid,value);
-  if ((btnid==1)&&value) {
-    if (cursor_visible) {
-      gamek_platform_show_cursor(0);
-      cursor_visible=0;
-    } else {
-      gamek_platform_show_cursor(1);
-      cursor_visible=1;
-    }
-  }
-}
-
-static void _hello_mouse_wheel(int16_t dx,int16_t dy) {
-  fprintf(stderr,"%s %+d,%+d\n",__func__,dx,dy);
-}
-
 /* MIDI input.
  */
  
@@ -191,15 +145,6 @@ const struct gamek_client gamek_client={
   .update=_hello_update,
   .render=_hello_render,
   .input_event=_hello_input_event,
-  
-  // Keyboards are optional. If you do text entry, it's good to support this:
-  .keyboard_input=_hello_keyboard_input,
-  .text_input=_hello_text_input,
-  
-  // Mouse input is usually not used:
-  .mouse_motion=_hello_mouse_motion,
-  .mouse_button=_hello_mouse_button,
-  .mouse_wheel=_hello_mouse_wheel,
   
   // MIDI input is usually not used:
   .midi_in=_hello_midi_in,

@@ -52,11 +52,6 @@ extern const struct gamek_platform_details {
  */
 void gamek_platform_terminate(uint8_t status);
 
-/* Platforms with a system mouse should hide the cursor by default.
- * Client can show it when desired.
- */
-void gamek_platform_show_cursor(uint8_t show);
-
 /* Send a MIDI-like event to the synthesizer.
  * I'm thinking platforms will supply synthesizers with hard-coded config.
  * You get 9 instruments and 10 PCM banks, and we'll establish some convention around chid, eg channel 0 is a violin...
@@ -97,32 +92,6 @@ extern const struct gamek_client {
    * The special button "CD" is Carrier Detect, means a device is present.
    */
   void (*input_event)(uint8_t playerid,uint16_t btnid,uint8_t value);
-  
-  //TODO consider removing the keyboard events, I don't think they're going to be helpful
-  
-  /* Raw keyboard input.
-   * (keycode) is USB-HID, normally page 7.
-   * (value) is 0=release, 1=press, 2=repeat.
-   * Return nonzero to acknowledge the event; then we won't attempt to report it as text.
-   * Be mindful that keyboard is not always available.
-   * You will not see events that the platform mapped as player inputs.
-   */
-  uint8_t (*keyboard_input)(uint32_t keycode,uint8_t value);
-  
-  /* Text input from keyboard.
-   * Be mindful that keyboard is not always available.
-   * You will not see events that the platform mapped as player inputs.
-   */
-  void (*text_input)(uint32_t codepoint);
-  
-  /* Mouse events.
-   * (x,y) are relative to the platform's framebuffer.
-   * If there's scaling, cropping, whatever, the platform digests that for you.
-   * Be mindful that mouse is not always available.
-   */
-  void (*mouse_motion)(int16_t x,int16_t y);
-  void (*mouse_button)(uint8_t btnid,uint8_t value);
-  void (*mouse_wheel)(int16_t dx,int16_t dy);
   
   /* MIDI input, if you're doing that.
    * Platform parses the streams and presents split events instead of serial.

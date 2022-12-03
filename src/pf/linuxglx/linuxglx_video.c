@@ -12,34 +12,7 @@ static void _cb_close(void *userdata) {
  
 static int _cb_key(void *userdata,int keycode,int value) {
   if (gamek_inmgr_keyboard_event(linuxglx.inmgr,keycode,value)) return 1;
-  if (gamek_client.keyboard_input) {
-    if (gamek_client.keyboard_input(keycode,value)) return 1;
-  }
   return 0;
-}
-
-static void _cb_text(void *userdata,int codepoint) {
-  if (!gamek_client.text_input) return;
-  gamek_client.text_input(codepoint);
-}
-
-/* Mouse events.
- */
- 
-static void _cb_mmotion(void *userdata,int x,int y) {
-  if (!gamek_client.mouse_motion) return;
-  akx11_coord_fb_from_win(&x,&y,linuxglx.akx11);
-  gamek_client.mouse_motion(x,y);
-}
-
-static void _cb_mbutton(void *userdata,int btnid,int value) {
-  if (!gamek_client.mouse_button) return;
-  gamek_client.mouse_button(btnid,value);
-}
-
-static void _cb_mwheel(void *userdata,int dx,int dy) {
-  if (!gamek_client.mouse_wheel) return;
-  gamek_client.mouse_wheel(dx,dy);
 }
 
 /* Init.
@@ -50,15 +23,6 @@ int linuxglx_video_init() {
     .close=_cb_close,
     .key=_cb_key,
   };
-  
-  // Mouse and text hooks only get populated if the client app has them.
-  // Leaving them unset here may allow X11 to use a tighter event mask.
-  if (gamek_client.text_input) delegate.text=_cb_text;
-  if (gamek_client.mouse_motion||gamek_client.mouse_button||gamek_client.mouse_wheel) {
-    delegate.mmotion=_cb_mmotion;
-    delegate.mbutton=_cb_mbutton;
-    delegate.mwheel=_cb_mwheel;
-  }
   
   int reqfbw=gamek_client.fbw;
   int reqfbh=gamek_client.fbh;
@@ -125,11 +89,4 @@ int linuxglx_video_init() {
  
 int linuxglx_video_update() {
   return akx11_update(linuxglx.akx11);
-}
-
-/* Cursor.
- */
- 
-void gamek_platform_show_cursor(uint8_t show) {
-  akx11_show_cursor(linuxglx.akx11,show);
 }

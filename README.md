@@ -19,7 +19,7 @@ So the framework aims for a very small memory footprint, and minimal CPU waste.
 - - [ ] macos
 - - [ ] mswin
 - - [ ] thumby
-- [ ] Keyboard events. Should we remove them?
+- [x] Keyboard events. Should we remove them? YES, mouse too.
 - [ ] Font
 - [ ] Storage, new platform API.
 - [ ] Network?
