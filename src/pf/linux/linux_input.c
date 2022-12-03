@@ -73,7 +73,9 @@ static void _cb_inmgr_midi(uint8_t chid,uint8_t opcode,uint8_t a,uint8_t b,void 
 static void _cb_inmgr_action(uint16_t action,void *userdata) {
   switch (action) {
     case GAMEK_ACTION_QUIT: gamek_linux.terminate++; break;
-    case GAMEK_ACTION_FULLSCREEN: akx11_set_fullscreen(gamek_linux.akx11,akx11_get_fullscreen(gamek_linux.akx11)?0:1); break;
+    #if GAMEK_USE_akx11
+      case GAMEK_ACTION_FULLSCREEN: if (gamek_linux.akx11) akx11_set_fullscreen(gamek_linux.akx11,akx11_get_fullscreen(gamek_linux.akx11)?0:1); break;
+    #endif
   }
 }
 
