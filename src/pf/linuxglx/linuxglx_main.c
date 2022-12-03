@@ -9,7 +9,12 @@ struct linuxglx linuxglx={0};
  
 static void linuxglx_cleanup() {
   alsapcm_del(linuxglx.alsapcm);
-  akx11_del(linuxglx.akx11);
+  #if GAMEK_USE_akx11
+    akx11_del(linuxglx.akx11);
+  #endif
+  #if GAMEK_USE_akdrm
+    akdrm_del(linuxglx.akdrm);
+  #endif
   evdev_del(linuxglx.evdev);
   ossmidi_del(linuxglx.ossmidi);
   gamek_inmgr_del(linuxglx.inmgr);
@@ -140,12 +145,7 @@ static void linuxglx_update() {
     linuxglx.uframec++;
   }
   if (gamek_client.render) {
-    if (!(linuxglx.fb.v=akx11_begin_fb(linuxglx.akx11))) {
-      linuxglx.terminate++;
-      return;
-    }
-    gamek_client.render(&linuxglx.fb);
-    akx11_end_fb(linuxglx.akx11,linuxglx.fb.v);
+    linuxglx_video_render();
     linuxglx.vframec++;
   }
 }

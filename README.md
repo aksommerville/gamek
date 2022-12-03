@@ -19,9 +19,12 @@ So the framework aims for a very small memory footprint, and minimal CPU waste.
 - - [ ] macos
 - - [ ] mswin
 - - [ ] thumby
+- - [ ] generic (headless, dummy drivers)
 - [x] Keyboard events. Should we remove them? YES, mouse too.
 - [ ] Font
 - [ ] Storage, new platform API.
 - [ ] Network?
 - [ ] Compile-time tooling for data.
 - [x] hello: Show input state.
+- [ ] linuxglx: Rename to "linux", it's doing both video drivers now.
+- [x] linuxglx: Make stdin noncanonical when akdrm in play, and read actions off it, eg Escape.

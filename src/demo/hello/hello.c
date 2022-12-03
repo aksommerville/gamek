@@ -41,7 +41,6 @@ static uint16_t inputv[5]={0};
  */
  
 static int8_t _hello_init() {
-  fprintf(stderr,"%s\n",__func__);
   return 0;
 }
 
@@ -49,7 +48,6 @@ static int8_t _hello_init() {
  */
  
 static void _hello_update() {
-  //fprintf(stderr,"%s\n",__func__);
 }
 
 /* Render.

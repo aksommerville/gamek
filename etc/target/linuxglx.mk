@@ -1,5 +1,8 @@
 # Units under src/opt to include.
-linuxglx_OPT_ENABLE:=argv inmgr fs serial akx11 alsapcm ossmidi evdev
+# You need at least one of (akx11,akdrm), and both is OK. Check LDPOST if you change it.
+linuxglx_OPT_ENABLE:=argv inmgr fs serial alsapcm ossmidi evdev
+linuxglx_OPT_ENABLE+=akx11
+linuxglx_OPT_ENABLE+=akdrm
 
 # Compiler, etc. This part sometimes needs tweaking.
 linuxglx_CCOPT:=-c -MMD -O3
@@ -8,10 +11,13 @@ linuxglx_CCDEF:= \
   -DGAMEK_PLATFORM_HEADER='"pf/linuxglx/gamek_pf_extra.h"' \
   $(patsubst %,-DGAMEK_USE_%=1,$(linuxglx_OPT_ENABLE))
 linuxglx_CCINC:=-Isrc -I$(MIDDIR)
+linuxglx_CCINC+=-I/usr/include/libdrm # if akdrm
 linuxglx_CCWARN:=-Werror -Wimplicit
 linuxglx_CC:=gcc $(linuxglx_CCOPT) $(linuxglx_CCDEF) $(linuxglx_CCINC) $(linuxglx_CCWARN)
 linuxglx_LD:=gcc
-linuxglx_LDPOST:=-lX11 -lGLX -lGL -lXinerama
+linuxglx_LDPOST:=
+linuxglx_LDPOST+=-lX11 -lGLX -lGL -lXinerama # if akx11
+linuxglx_LDPOST+=-ldrm -lgbm -lEGL -lGLESv2 # if akdrm
 
 # Digest data files.
 # All data files get turned into C code and compiled like sources.
@@ -27,7 +33,6 @@ linuxglx_SRCFILES:= \
   $(filter src/pf/linuxglx/%,$(SRCFILES)) \
   $(filter $(foreach U,$(linuxglx_OPT_ENABLE),src/opt/$U/%),$(SRCFILES)) \
   $(linuxglx_DATA_C)
-#  src/pf/gamek_pf.h \
   
 linuxglx_CFILES:=$(filter %.c,$(linuxglx_SRCFILES))
 linuxglx_OFILES_ALL:=$(patsubst src/%,$(MIDDIR)/%,$(addsuffix .o,$(basename $(linuxglx_CFILES))))
