@@ -1,4 +1,4 @@
-#include "linuxglx_internal.h"
+#include "linux_internal.h"
 
 /* Device connected.
  */
@@ -22,7 +22,7 @@ static void _cb_evdev_connect(struct evdev_device *device) {
   if ((namec<0)||(namec>=sizeof(name))) namec=0;
   if (namec) greeting.name=name;
   evdev_device_enumerate(device,_cb_evdev_cap,&greeting);
-  gamek_inmgr_joystick_connect(linuxglx.inmgr,&greeting);
+  gamek_inmgr_joystick_connect(gamek_linux.inmgr,&greeting);
   gamek_inmgr_joystick_greeting_cleanup(&greeting);
 }
 
@@ -30,26 +30,26 @@ static void _cb_evdev_connect(struct evdev_device *device) {
  */
  
 static void _cb_evdev_disconnect(struct evdev_device *device) {
-  gamek_inmgr_joystick_disconnect(linuxglx.inmgr,device);
+  gamek_inmgr_joystick_disconnect(gamek_linux.inmgr,device);
 }
  
 static void _cb_evdev_button(struct evdev_device *device,int type,int code,int value) {
-  gamek_inmgr_joystick_event(linuxglx.inmgr,device,(type<<16)|code,value);
+  gamek_inmgr_joystick_event(gamek_linux.inmgr,device,(type<<16)|code,value);
 }
  
 static void _cb_ossmidi_events(int devid,const void *v,int c,void *userdata) {
-  gamek_inmgr_midi_events(linuxglx.inmgr,devid,v,c);
+  gamek_inmgr_midi_events(gamek_linux.inmgr,devid,v,c);
 }
 
 /* Lost inotify.
  */
  
 static void _cb_evdev_lost_inotify(struct evdev *evdev) {
-  fprintf(stderr,"%s:WARNING: Lost evdev inotify. New joystick connections will not be detected.\n",linuxglx.exename);
+  fprintf(stderr,"%s:WARNING: Lost evdev inotify. New joystick connections will not be detected.\n",gamek_linux.exename);
 }
 
 static void _cb_ossmidi_lost_inotify(void *userdata) {
-  fprintf(stderr,"%s:WARNING: Lost ossmidi inotify. New MIDI connections will not be detected.\n",linuxglx.exename);
+  fprintf(stderr,"%s:WARNING: Lost ossmidi inotify. New MIDI connections will not be detected.\n",gamek_linux.exename);
 }
 
 /* Callbacks from inmgr, ready for delivery.
@@ -72,8 +72,8 @@ static void _cb_inmgr_midi(uint8_t chid,uint8_t opcode,uint8_t a,uint8_t b,void 
 
 static void _cb_inmgr_action(uint16_t action,void *userdata) {
   switch (action) {
-    case GAMEK_ACTION_QUIT: linuxglx.terminate++; break;
-    case GAMEK_ACTION_FULLSCREEN: akx11_set_fullscreen(linuxglx.akx11,akx11_get_fullscreen(linuxglx.akx11)?0:1); break;
+    case GAMEK_ACTION_QUIT: gamek_linux.terminate++; break;
+    case GAMEK_ACTION_FULLSCREEN: akx11_set_fullscreen(gamek_linux.akx11,akx11_get_fullscreen(gamek_linux.akx11)?0:1); break;
   }
 }
 
@@ -81,9 +81,9 @@ static void _cb_inmgr_action(uint16_t action,void *userdata) {
  */
  
 static void _cb_inmgr_config_dirty(struct gamek_inmgr *inmgr,void *userdata) {
-  if (linuxglx.input_cfg_path) {
-    if (gamek_inmgr_save_configuration(inmgr,linuxglx.input_cfg_path)<0) {
-      fprintf(stderr,"%s:WARNING: Failed to save input config.\n",linuxglx.input_cfg_path);
+  if (gamek_linux.input_cfg_path) {
+    if (gamek_inmgr_save_configuration(inmgr,gamek_linux.input_cfg_path)<0) {
+      fprintf(stderr,"%s:WARNING: Failed to save input config.\n",gamek_linux.input_cfg_path);
     }
   }
 }
@@ -91,7 +91,7 @@ static void _cb_inmgr_config_dirty(struct gamek_inmgr *inmgr,void *userdata) {
 /* Init.
  */
  
-int linuxglx_input_init() {
+int linux_input_init() {
 
   /* inmgr
    */
@@ -104,13 +104,13 @@ int linuxglx_input_init() {
     .midi=_cb_inmgr_midi,
     .config_dirty=_cb_inmgr_config_dirty,
   };
-  if (!(linuxglx.inmgr=gamek_inmgr_new(&idelegate))) return -1;
-  if (linuxglx.input_cfg_path) {
-    if (gamek_inmgr_configure_file(linuxglx.inmgr,linuxglx.input_cfg_path)<0) {
-      fprintf(stderr,"%s:WARNING: Failed to apply input config.\n",linuxglx.input_cfg_path);
+  if (!(gamek_linux.inmgr=gamek_inmgr_new(&idelegate))) return -1;
+  if (gamek_linux.input_cfg_path) {
+    if (gamek_inmgr_configure_file(gamek_linux.inmgr,gamek_linux.input_cfg_path)<0) {
+      fprintf(stderr,"%s:WARNING: Failed to apply input config.\n",gamek_linux.input_cfg_path);
     }
   }
-  if (gamek_inmgr_ready(linuxglx.inmgr)<0) return -1;
+  if (gamek_inmgr_ready(gamek_linux.inmgr)<0) return -1;
 
   /* evdev
    */
@@ -120,11 +120,11 @@ int linuxglx_input_init() {
     .button=_cb_evdev_button,
     .lost_inotify=_cb_evdev_lost_inotify,
   };
-  if (!(linuxglx.evdev=evdev_new(&delegate,0))) {
-    fprintf(stderr,"%s: Failed to initialize evdev.\n",linuxglx.exename);
+  if (!(gamek_linux.evdev=evdev_new(&delegate,0))) {
+    fprintf(stderr,"%s: Failed to initialize evdev.\n",gamek_linux.exename);
     return -1;
   }
-  if (evdev_scan_now(linuxglx.evdev)<0) return -1;
+  if (evdev_scan_now(gamek_linux.evdev)<0) return -1;
   
   /* ossmidi
    * Works about the same as evdev, so I keep them together.
@@ -134,11 +134,11 @@ int linuxglx_input_init() {
       .events=_cb_ossmidi_events,
       .lost_inotify=_cb_ossmidi_lost_inotify,
     };
-    if (!(linuxglx.ossmidi=ossmidi_new(&mdelegate))) {
-      fprintf(stderr,"%s: Failed to initialize MIDI.\n",linuxglx.exename);
+    if (!(gamek_linux.ossmidi=ossmidi_new(&mdelegate))) {
+      fprintf(stderr,"%s: Failed to initialize MIDI.\n",gamek_linux.exename);
       return -1;
     }
-    if (ossmidi_rescan_now(linuxglx.ossmidi)<0) return -1;
+    if (ossmidi_rescan_now(gamek_linux.ossmidi)<0) return -1;
   }
   
   return 0;

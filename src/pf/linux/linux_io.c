@@ -1,4 +1,4 @@
-#include "linuxglx_internal.h"
+#include "linux_internal.h"
 #include <unistd.h>
 
 /* Pop one codepoint or keycode off stdin.
@@ -8,7 +8,7 @@
  * Return length consumed.
  */
  
-static int linuxglx_stdin_next(int *codepoint,const uint8_t *src,int srcc) {
+static int linux_stdin_next(int *codepoint,const uint8_t *src,int srcc) {
   if (srcc<1) return -1;
   
   // Is it a VT escape?
@@ -49,20 +49,20 @@ static int linuxglx_stdin_next(int *codepoint,const uint8_t *src,int srcc) {
 /* Read stdin and fire actions.
  */
  
-static int linuxglx_update_stdin() {
+static int linux_update_stdin() {
   uint8_t buf[256];
   int bufc=read(STDIN_FILENO,buf,sizeof(buf));
   if (bufc<=0) {
-    linuxglx.use_stdin=0;
+    gamek_linux.use_stdin=0;
     return 0;
   }
   int bufp=0; while (bufp<bufc) {
     int codepoint=0;
-    int err=linuxglx_stdin_next(&codepoint,buf+bufp,bufc-bufp);
+    int err=linux_stdin_next(&codepoint,buf+bufp,bufc-bufp);
     if (err<=0) break;
     bufp+=err;
     switch (codepoint) {
-      case 0x1b: linuxglx.terminate++; break;
+      case 0x1b: gamek_linux.terminate++; break;
       //TODO We could get fancy here and send events out to inmgr. We'd have to make sure they don't get mapped as player inputs.
       // (We can't do player input from stdin because we don't get OFF events).
     }
@@ -73,18 +73,18 @@ static int linuxglx_update_stdin() {
 /* File ready for reading.
  */
  
-static int linuxglx_update_fd(int fd) {
+static int linux_update_fd(int fd) {
 
-  if (fd==STDIN_FILENO) return linuxglx_update_stdin();
+  if (fd==STDIN_FILENO) return linux_update_stdin();
   
-  if (linuxglx.evdev) {
-    int err=evdev_update_fd(linuxglx.evdev,fd);
+  if (gamek_linux.evdev) {
+    int err=evdev_update_fd(gamek_linux.evdev,fd);
     if (err<0) return -1;
     if (err) return 0;
   }
   
-  if (linuxglx.ossmidi) {
-    int err=ossmidi_update_fd(linuxglx.ossmidi,fd);
+  if (gamek_linux.ossmidi) {
+    int err=ossmidi_update_fd(gamek_linux.ossmidi,fd);
     if (err<0) return -1;
     if (err) return 0;
   }
@@ -95,32 +95,32 @@ static int linuxglx_update_fd(int fd) {
 /* Rebuild pollfdv.
  */
  
-static int linuxglx_pollfdv_add(int fd,void *dummy) {
-  if (linuxglx.pollfdc>=linuxglx.pollfda) {
-    int na=linuxglx.pollfda+8;
+static int linux_pollfdv_add(int fd,void *dummy) {
+  if (gamek_linux.pollfdc>=gamek_linux.pollfda) {
+    int na=gamek_linux.pollfda+8;
     if (na>INT_MAX/sizeof(struct pollfd)) return -1;
-    void *nv=realloc(linuxglx.pollfdv,sizeof(struct pollfd)*na);
+    void *nv=realloc(gamek_linux.pollfdv,sizeof(struct pollfd)*na);
     if (!nv) return -1;
-    linuxglx.pollfdv=nv;
-    linuxglx.pollfda=na;
+    gamek_linux.pollfdv=nv;
+    gamek_linux.pollfda=na;
   }
-  struct pollfd *pollfd=linuxglx.pollfdv+linuxglx.pollfdc++;
+  struct pollfd *pollfd=gamek_linux.pollfdv+gamek_linux.pollfdc++;
   pollfd->fd=fd;
   pollfd->events=POLLIN|POLLERR|POLLHUP;
   pollfd->revents=0;
   return 0;
 }
  
-static int linuxglx_pollfdv_populate() {
-  linuxglx.pollfdc=0;
-  if (linuxglx.evdev) {
-    if (evdev_for_each_fd(linuxglx.evdev,linuxglx_pollfdv_add,0)<0) return -1;
+static int linux_pollfdv_populate() {
+  gamek_linux.pollfdc=0;
+  if (gamek_linux.evdev) {
+    if (evdev_for_each_fd(gamek_linux.evdev,linux_pollfdv_add,0)<0) return -1;
   }
-  if (linuxglx.ossmidi) {
-    if (ossmidi_for_each_fd(linuxglx.ossmidi,linuxglx_pollfdv_add,0)<0) return -1;
+  if (gamek_linux.ossmidi) {
+    if (ossmidi_for_each_fd(gamek_linux.ossmidi,linux_pollfdv_add,0)<0) return -1;
   }
-  if (linuxglx.use_stdin) {
-    if (linuxglx_pollfdv_add(STDIN_FILENO,0)<0) return -1;
+  if (gamek_linux.use_stdin) {
+    if (linux_pollfdv_add(STDIN_FILENO,0)<0) return -1;
   }
   return 0;
 }
@@ -128,21 +128,21 @@ static int linuxglx_pollfdv_populate() {
 /* Poll input files if there are any, or sleep.
  */
  
-static int linuxglx_poll_or_sleep(int tous) {
-  if (linuxglx_pollfdv_populate()<0) {
-    linuxglx.terminate++;
+static int linux_poll_or_sleep(int tous) {
+  if (linux_pollfdv_populate()<0) {
+    gamek_linux.terminate++;
     return -1;
   }
-  if (linuxglx.pollfdc) {
+  if (gamek_linux.pollfdc) {
     int toms=(tous+999)/1000;
-    int err=poll(linuxglx.pollfdv,linuxglx.pollfdc,toms);
+    int err=poll(gamek_linux.pollfdv,gamek_linux.pollfdc,toms);
     if (err>0) {
-      const struct pollfd *pollfd=linuxglx.pollfdv;
-      int i=linuxglx.pollfdc;
+      const struct pollfd *pollfd=gamek_linux.pollfdv;
+      int i=gamek_linux.pollfdc;
       for (;i-->0;pollfd++) {
         if (!pollfd->revents) continue;
-        if (linuxglx_update_fd(pollfd->fd)<0) {
-          linuxglx.terminate++;
+        if (linux_update_fd(pollfd->fd)<0) {
+          gamek_linux.terminate++;
           return -1;
         }
       }
@@ -156,26 +156,26 @@ static int linuxglx_poll_or_sleep(int tous) {
 /* Poll or sleep, and update whatever polls.
  */
  
-int linuxglx_io_update() {
-  int64_t now=linuxglx_now_us();
-  if (now>=linuxglx.nexttime) { // Ready to update, don't delay.
-    linuxglx.nexttime+=linuxglx.frametime;
-    if (linuxglx.nexttime<=now) { // We've been stalled more than one frame. Resync clock.
-      linuxglx.clockfaultc++;
-      linuxglx.nexttime=now+linuxglx.frametime;
+int linux_io_update() {
+  int64_t now=linux_now_us();
+  if (now>=gamek_linux.nexttime) { // Ready to update, don't delay.
+    gamek_linux.nexttime+=gamek_linux.frametime;
+    if (gamek_linux.nexttime<=now) { // We've been stalled more than one frame. Resync clock.
+      gamek_linux.clockfaultc++;
+      gamek_linux.nexttime=now+gamek_linux.frametime;
     }
   } else { // Delay until nexttime
-    while (now<linuxglx.nexttime) {
-      int64_t sleeptime=(linuxglx.nexttime-now);
-      if (sleeptime>LINUXGLX_SLEEP_LIMIT_US) { // Improbable next time. Resync clock.
-        linuxglx.clockfaultc++;
-        linuxglx.nexttime=now;
+    while (now<gamek_linux.nexttime) {
+      int64_t sleeptime=(gamek_linux.nexttime-now);
+      if (sleeptime>LINUX_SLEEP_LIMIT_US) { // Improbable next time. Resync clock.
+        gamek_linux.clockfaultc++;
+        gamek_linux.nexttime=now;
         break;
       }
-      if (linuxglx_poll_or_sleep(sleeptime)<0) return -1;
-      now=linuxglx_now_us();
+      if (linux_poll_or_sleep(sleeptime)<0) return -1;
+      now=linux_now_us();
     }
-    linuxglx.nexttime+=linuxglx.frametime;
+    gamek_linux.nexttime+=gamek_linux.frametime;
   }
   return 0;
 }

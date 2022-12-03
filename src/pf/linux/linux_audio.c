@@ -1,4 +1,4 @@
-#include "linuxglx_internal.h"
+#include "linux_internal.h"
 
 /* Callback.
  */
@@ -6,33 +6,33 @@
 static void _cb_pcm(int16_t *v,int c,void *userdata) {
   //TODO synthesizer
   memset(v,0,c);
-  linuxglx.aframec+=c/alsapcm_get_chanc(linuxglx.alsapcm);
+  gamek_linux.aframec+=c/alsapcm_get_chanc(gamek_linux.alsapcm);
 }
 
 /* Init.
  */
  
-int linuxglx_audio_init() {
+int linux_audio_init() {
 
   struct alsapcm_delegate delegate={
     .pcm_out=_cb_pcm,
   };
   struct alsapcm_setup setup={
-    .rate=linuxglx.audio_rate,
-    .chanc=linuxglx.audio_chanc,
-    .device=linuxglx.audio_device,
-    .buffersize=linuxglx.audio_buffer_size,
+    .rate=gamek_linux.audio_rate,
+    .chanc=gamek_linux.audio_chanc,
+    .device=gamek_linux.audio_device,
+    .buffersize=gamek_linux.audio_buffer_size,
   };
-  if (!(linuxglx.alsapcm=alsapcm_new(&delegate,&setup))) {
-    fprintf(stderr,"%s:WARNING: Failed to create ALSA context. Proceeding without audio.\n",linuxglx.exename);
+  if (!(gamek_linux.alsapcm=alsapcm_new(&delegate,&setup))) {
+    fprintf(stderr,"%s:WARNING: Failed to create ALSA context. Proceeding without audio.\n",gamek_linux.exename);
     return 0;
   }
   
   fprintf(stderr,
     "%s: Initialized audio. rate=%d chanc=%d\n",
-    linuxglx.exename,
-    alsapcm_get_rate(linuxglx.alsapcm),
-    alsapcm_get_chanc(linuxglx.alsapcm)
+    gamek_linux.exename,
+    alsapcm_get_rate(gamek_linux.alsapcm),
+    alsapcm_get_chanc(gamek_linux.alsapcm)
   );
   
   //TODO synthesizer

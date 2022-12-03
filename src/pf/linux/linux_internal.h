@@ -1,5 +1,5 @@
-#ifndef LINUXGLX_INTERNAL_H
-#define LINUXGLX_INTERNAL_H
+#ifndef LINUX_INTERNAL_H
+#define LINUX_INTERNAL_H
 
 #include "pf/gamek_pf.h"
 #include "common/gamek_image.h"
@@ -22,10 +22,10 @@
   #include "opt/akdrm/akdrm.h"
 #endif
 
-#define LINUXGLX_UPDATE_RATE_HZ 60
-#define LINUXGLX_SLEEP_LIMIT_US 20000 /* Each frame should be 16666, anything larger is an error somehow. */
+#define LINUX_UPDATE_RATE_HZ 60
+#define LINUX_SLEEP_LIMIT_US 20000 /* Each frame should be 16666, anything larger is an error somehow. */
 
-extern struct linuxglx {
+extern struct gamek_linux {
 
   // Process stuff:
   const char *exename;
@@ -68,22 +68,22 @@ extern struct linuxglx {
   struct gamek_inmgr *inmgr;
   //TODO synthesizer
   
-} linuxglx;
+} gamek_linux;
 
-void linuxglx_perfmon_begin();
-void linuxglx_perfmon_end();
-double linuxglx_now_s();
-double linuxglx_now_cpu_s();
-int64_t linuxglx_now_us();
+void linux_perfmon_begin();
+void linux_perfmon_end();
+double linux_now_s();
+double linux_now_cpu_s();
+int64_t linux_now_us();
 
-int linuxglx_io_update();
+int linux_io_update();
 
-int linuxglx_video_init();
-int linuxglx_video_update();
-void linuxglx_video_render();
+int linux_video_init();
+int linux_video_update();
+void linux_video_render();
 
-int linuxglx_input_init();
+int linux_input_init();
 
-int linuxglx_audio_init();
+int linux_audio_init();
 
 #endif

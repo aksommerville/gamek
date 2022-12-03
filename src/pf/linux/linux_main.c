@@ -1,25 +1,25 @@
-#include "linuxglx_internal.h"
+#include "linux_internal.h"
 #include "opt/argv/gamek_argv.h"
 #include <signal.h>
 
-struct linuxglx linuxglx={0};
+struct gamek_linux gamek_linux={0};
 
 /* Cleanup.
  */
  
-static void linuxglx_cleanup() {
-  alsapcm_del(linuxglx.alsapcm);
+static void linux_cleanup() {
+  alsapcm_del(gamek_linux.alsapcm);
   #if GAMEK_USE_akx11
-    akx11_del(linuxglx.akx11);
+    akx11_del(gamek_linux.akx11);
   #endif
   #if GAMEK_USE_akdrm
-    akdrm_del(linuxglx.akdrm);
+    akdrm_del(gamek_linux.akdrm);
   #endif
-  evdev_del(linuxglx.evdev);
-  ossmidi_del(linuxglx.ossmidi);
-  gamek_inmgr_del(linuxglx.inmgr);
-  if (linuxglx.input_cfg_path) free(linuxglx.input_cfg_path);
-  if (linuxglx.audio_device) free(linuxglx.audio_device);
+  evdev_del(gamek_linux.evdev);
+  ossmidi_del(gamek_linux.ossmidi);
+  gamek_inmgr_del(gamek_linux.inmgr);
+  if (gamek_linux.input_cfg_path) free(gamek_linux.input_cfg_path);
+  if (gamek_linux.audio_device) free(gamek_linux.audio_device);
 }
 
 /* Signals.
@@ -27,8 +27,8 @@ static void linuxglx_cleanup() {
  
 static void _cb_signal(int sigid) {
   switch (sigid) {
-    case SIGINT: if (++(linuxglx.terminate)>=3) {
-        fprintf(stderr,"%s: Too many unprocessed signals.\n",linuxglx.exename);
+    case SIGINT: if (++(gamek_linux.terminate)>=3) {
+        fprintf(stderr,"%s: Too many unprocessed signals.\n",gamek_linux.exename);
         exit(1);
       } break;
   }
@@ -37,8 +37,8 @@ static void _cb_signal(int sigid) {
 /* --help
  */
  
-static void linuxglx_print_help(const char *topic,int topicc) {
-  fprintf(stderr,"Usage: %s [OPTIONS]\n",linuxglx.exename);
+static void linux_print_help(const char *topic,int topicc) {
+  fprintf(stderr,"Usage: %s [OPTIONS]\n",gamek_linux.exename);
   fprintf(stderr,
     "\n"
     "OPTIONS:\n"
@@ -69,49 +69,49 @@ static void linuxglx_print_help(const char *topic,int topicc) {
 static int _cb_argv(const char *k,int kc,const char *v,int vc,int vn,void *userdata) {
   
   if ((kc==4)&&!memcmp(k,"help",4)) {
-    linuxglx_print_help(v,vc);
+    linux_print_help(v,vc);
     return 1; // >0 to terminate successfully
   }
   
   if ((kc==10)&&!memcmp(k,"fullscreen",10)) {
-    linuxglx.init_fullscreen=vn;
+    gamek_linux.init_fullscreen=vn;
     return 0;
   }
   
   if ((kc==5)&&!memcmp(k,"input",5)) {
-    if (linuxglx.input_cfg_path) free(linuxglx.input_cfg_path);
-    if (!(linuxglx.input_cfg_path=malloc(vc+1))) return -1;
-    memcpy(linuxglx.input_cfg_path,v,vc);
-    linuxglx.input_cfg_path[vc]=0;
+    if (gamek_linux.input_cfg_path) free(gamek_linux.input_cfg_path);
+    if (!(gamek_linux.input_cfg_path=malloc(vc+1))) return -1;
+    memcpy(gamek_linux.input_cfg_path,v,vc);
+    gamek_linux.input_cfg_path[vc]=0;
     return 0;
   }
   
   if ((kc==10)&&!memcmp(k,"audio-rate",10)) {
-    linuxglx.audio_rate=vn;
+    gamek_linux.audio_rate=vn;
     return 0;
   }
   
   if ((kc==11)&&!memcmp(k,"audio-chanc",11)) {
-    linuxglx.audio_chanc=vn;
+    gamek_linux.audio_chanc=vn;
     return 0;
   }
   
   if ((kc==12)&&!memcmp(k,"audio-buffer",12)) {
-    linuxglx.audio_buffer_size=vn;
+    gamek_linux.audio_buffer_size=vn;
     return 0;
   }
   
   if ((kc==12)&&!memcmp(k,"audio-device",12)) {
-    if (linuxglx.audio_device) free(linuxglx.audio_device);
-    if (!(linuxglx.audio_device=malloc(vc+1))) return -1;
-    memcpy(linuxglx.audio_device,v,vc);
-    linuxglx.audio_device[vc]=0;
+    if (gamek_linux.audio_device) free(gamek_linux.audio_device);
+    if (!(gamek_linux.audio_device=malloc(vc+1))) return -1;
+    memcpy(gamek_linux.audio_device,v,vc);
+    gamek_linux.audio_device[vc]=0;
     return 0;
   }
   
   fprintf(stderr,
     "%s:WARNING: Unexpected argument '%.*s'='%.*s'\n",
-    linuxglx.exename,kc,k,vc,v
+    gamek_linux.exename,kc,k,vc,v
   );
   return 0;
 }
@@ -119,14 +119,14 @@ static int _cb_argv(const char *k,int kc,const char *v,int vc,int vn,void *userd
 /* Update.
  */
  
-static void linuxglx_update() {
+static void linux_update() {
 
   /* Evdev and MIDI use a sensible poller for updates.
    * ALSA uses a background thread, and X11 does its own thing.
    * If we add networking or... what... async file reading? That would be general "io" too.
    */
-  if (linuxglx_io_update()<0) {
-    linuxglx.terminate++;
+  if (linux_io_update()<0) {
+    gamek_linux.terminate++;
     return;
   }
   
@@ -134,19 +134,19 @@ static void linuxglx_update() {
    * There is Xlib API to expose file descriptors, but I've tried and never got it working.
    * I assume that's because it uses shared memory or something under the hood.
    */
-  if (linuxglx_video_update()<0) {
-    linuxglx.terminate++;
+  if (linux_video_update()<0) {
+    gamek_linux.terminate++;
     return;
   }
   
   // Update game. Keep logical updates and video updates in sync, no reason not to.
   if (gamek_client.update) {
     gamek_client.update();
-    linuxglx.uframec++;
+    gamek_linux.uframec++;
   }
   if (gamek_client.render) {
-    linuxglx_video_render();
-    linuxglx.vframec++;
+    linux_video_render();
+    gamek_linux.vframec++;
   }
 }
 
@@ -155,7 +155,7 @@ static void linuxglx_update() {
  
 void gamek_platform_terminate(uint8_t status) {
   fprintf(stderr,"Client requests termination with status %d\n",status);
-  linuxglx.terminate++;
+  gamek_linux.terminate++;
 }
 
 /* Main.
@@ -163,38 +163,38 @@ void gamek_platform_terminate(uint8_t status) {
  
 int main(int argc,char **argv) {
   
-  linuxglx.exename=gamek_argv_exename(argc,argv);
+  gamek_linux.exename=gamek_argv_exename(argc,argv);
   int err=gamek_argv_read(argc,argv,_cb_argv,0);
   if (err<0) return 1;
   if (err>0) return 0;
   
   signal(SIGINT,_cb_signal);
-  if (linuxglx_video_init()<0) return 1;
-  if (linuxglx_input_init()<0) return 1;
-  if (linuxglx_audio_init()<0) return 1;
+  if (linux_video_init()<0) return 1;
+  if (linux_input_init()<0) return 1;
+  if (linux_audio_init()<0) return 1;
   
   if (gamek_client.init) {
     if (gamek_client.init()<0) return 1;
   }
   
   // Start audio after client init, no sooner.
-  if (linuxglx.alsapcm) {
-    alsapcm_set_running(linuxglx.alsapcm,1);
+  if (gamek_linux.alsapcm) {
+    alsapcm_set_running(gamek_linux.alsapcm,1);
   }
   
-  linuxglx_perfmon_begin();
-  linuxglx.nexttime=linuxglx_now_us();
-  linuxglx.frametime=1000000/LINUXGLX_UPDATE_RATE_HZ;
+  linux_perfmon_begin();
+  gamek_linux.nexttime=linux_now_us();
+  gamek_linux.frametime=1000000/LINUX_UPDATE_RATE_HZ;
   
-  while (!linuxglx.terminate) {
-    linuxglx_update();
+  while (!gamek_linux.terminate) {
+    linux_update();
   }
   
-  if (!linuxglx.status) {
-    linuxglx_perfmon_end();
+  if (!gamek_linux.status) {
+    linux_perfmon_end();
   }
   
-  linuxglx_cleanup();
+  linux_cleanup();
   
-  return linuxglx.status;
+  return gamek_linux.status;
 }

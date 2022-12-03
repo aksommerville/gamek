@@ -12,7 +12,6 @@ So the framework aims for a very small memory footprint, and minimal CPU waste.
 - [ ] inmgr: Override channel ID per device. Or maybe not? Not sure I want this.
 - [x] linuxglx: Audio setup per command line.
 - [ ] Other platforms
-- - [ ] linuxdrm (probly just linuxglx with akdrm instead of akx11).
 - - [ ] tiny
 - - [ ] picosystem
 - - [ ] web
@@ -26,5 +25,5 @@ So the framework aims for a very small memory footprint, and minimal CPU waste.
 - [ ] Network?
 - [ ] Compile-time tooling for data.
 - [x] hello: Show input state.
-- [ ] linuxglx: Rename to "linux", it's doing both video drivers now.
+- [x] linuxglx: Rename to "linux", it's doing both video drivers now.
 - [x] linuxglx: Make stdin noncanonical when akdrm in play, and read actions off it, eg Escape.
