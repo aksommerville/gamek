@@ -14,6 +14,7 @@ static void linuxglx_cleanup() {
   ossmidi_del(linuxglx.ossmidi);
   gamek_inmgr_del(linuxglx.inmgr);
   if (linuxglx.input_cfg_path) free(linuxglx.input_cfg_path);
+  if (linuxglx.audio_device) free(linuxglx.audio_device);
 }
 
 /* Signals.
@@ -34,10 +35,16 @@ static void _cb_signal(int sigid) {
 static void linuxglx_print_help(const char *topic,int topicc) {
   fprintf(stderr,"Usage: %s [OPTIONS]\n",linuxglx.exename);
   fprintf(stderr,
+    "\n"
     "OPTIONS:\n"
-    "  --help            Print this message.\n"
-    "  --fullscreen=0|1  Start in fullscreen.\n"
-    "  --input=PATH      Path to input config (read/write).\n"
+    "  --help                  Print this message.\n"
+    "  --fullscreen=0|1        Start in fullscreen.\n"
+    "  --input=PATH            Path to input config (read/write).\n"
+    "  --audio-rate=HZ         Output rate.\n"
+    "  --audio-chanc=1|2       Channel count.\n"
+    "  --audio-device=NAME     eg 'pcmC0D0p', see /dev/snd.\n"
+    "  --audio-buffer=INT      Audio buffer size in frames.\n"
+    "\n"
     "DEFAULT KEYBOARD MAPPING:\n"
     "  ESC      Quit\n"
     "  F11      Toggle fullscreen\n"
@@ -71,6 +78,29 @@ static int _cb_argv(const char *k,int kc,const char *v,int vc,int vn,void *userd
     if (!(linuxglx.input_cfg_path=malloc(vc+1))) return -1;
     memcpy(linuxglx.input_cfg_path,v,vc);
     linuxglx.input_cfg_path[vc]=0;
+    return 0;
+  }
+  
+  if ((kc==10)&&!memcmp(k,"audio-rate",10)) {
+    linuxglx.audio_rate=vn;
+    return 0;
+  }
+  
+  if ((kc==11)&&!memcmp(k,"audio-chanc",11)) {
+    linuxglx.audio_chanc=vn;
+    return 0;
+  }
+  
+  if ((kc==12)&&!memcmp(k,"audio-buffer",12)) {
+    linuxglx.audio_buffer_size=vn;
+    return 0;
+  }
+  
+  if ((kc==12)&&!memcmp(k,"audio-device",12)) {
+    if (linuxglx.audio_device) free(linuxglx.audio_device);
+    if (!(linuxglx.audio_device=malloc(vc+1))) return -1;
+    memcpy(linuxglx.audio_device,v,vc);
+    linuxglx.audio_device[vc]=0;
     return 0;
   }
   

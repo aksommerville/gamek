@@ -146,7 +146,7 @@ int sr_encode_fmt(struct sr_encoder *encoder,const char *fmt,...) {
     if ((err<0)||(err>=INT_MAX)) return -1;
     if (encoder->c<encoder->a-err) {
       encoder->c+=err;
-      return 0;
+      return err;
     }
     if (sr_encoder_require(encoder,err+1)<0) return -1;
   }

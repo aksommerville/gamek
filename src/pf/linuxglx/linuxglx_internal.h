@@ -28,6 +28,10 @@ extern struct linuxglx {
   // Configuration:
   int init_fullscreen;
   char *input_cfg_path;
+  int audio_rate;
+  int audio_chanc;
+  char *audio_device;
+  int audio_buffer_size;
   
   // Performance monitor:
   int uframec,vframec,aframec;
