@@ -1,0 +1,50 @@
+Mynth: Minimal Synthesizer
+
+Unused MIDI things (ok to send them, but will be ignored):
+  Note Off velocity.
+  Note Adjust (per-note aftertouch).
+  Program Change.
+  Channel Pressure (global aftertouch).
+  System and Realtime events, except 0xff Reset.
+  
+Running channels can be configured with Control Changes.
+  0x07 Volume
+  0x0c Attack time ms, minimum or no-velocity
+  0x0d Attack level, ''
+  0x0e Decay time ms, ''
+  0x0f Sustain level, ''
+  0x10 Release time 8ms, ''
+  0x2c Attack time ms, maximum velocity
+  0x2d Attack level, ''
+  0x2e Decay time ms, ''
+  0x2f Sustain level, ''
+  0x30 Release time 8ms, ''
+  0x40 Enable sustain
+  0x46 Wave select, 0..7
+  0x47 Wheel range, dimes.
+  0x48 Warble range, dimes.
+  0x49 Warble rate, hz.
+  0x78 All Sound Off
+  0x79 Reset Controllers
+  0x7b All Notes Off
+  
+To define the envelope, set the low values first (0x0c..0x10), then high values (0x2c..0x30) if you want velocity sensitivity.
+
+=== Song format ===
+
+Songs are a serial dump of events with a short header:
+  0   1 Tempo, ms/tick
+  1   1 Start position, bytes. Always 4, but can be greater if this format changes in the future.
+  2   2 Loop position, bytes.
+  4
+  
+After the header are events, identifiable by the high bits of the first byte:
+  00000000                   End of song.
+  0nnnnnnn                   Delay (n) ticks.
+  1000nnnn nnnnnnnn          Delay (n) ticks.
+  1001cccc NNNNNNNv vvDDDDDD One-shot note. (c) chid, (N) noteid, (v) velocity, (D) duration ticks.
+  1010cccc 0nnnnnnn 0vvvvvvv Note On. (c) chid, (n) noteid, (v) velocity.
+  1011cccc 0nnnnnnn          Note Off.
+  1100cccc kkkkkkkk vvvvvvvv Control Change. (k,v) normally in 0..127, but we do allow the full 8 bits.
+  1101dddd vvvvvvvv          Pitch wheel. unsigned: 0x80 is default.
+  111xxxxx ...               Reserved, illegal.

@@ -10,6 +10,7 @@ void gamek_image_clear(struct gamek_image *image) {
   int16_t c=image->w;
   switch (image->fmt) {
     case GAMEK_IMGFMT_RGBX: c<<=2; break;
+    case GAMEK_IMGFMT_BGR332: break;
     default: return;
   }
   if (c==image->stride) {
@@ -47,6 +48,11 @@ void gamek_image_fill_rect(
           int16_t xi=w;
           for (;xi-->0;p++) *p=pixel;
         }
+      } break;
+      
+    case GAMEK_IMGFMT_BGR332: {
+        uint8_t *row=((uint8_t*)image->v+y*image->stride)+x;
+        for (;h-->0;row+=image->stride) memset(row,pixel,w);
       } break;
       
   }
@@ -222,6 +228,7 @@ void gamek_image_render_glyph(
   uint8_t bytesperpixel;
   switch (image->fmt) {
     case GAMEK_IMGFMT_RGBX: bytesperpixel=4; break;
+    case GAMEK_IMGFMT_BGR332: bytesperpixel=1; break;
     default: return;
   }
   uint8_t *dstrow=(uint8_t*)image->v+image->stride*dsty+dstx*bytesperpixel;
@@ -229,8 +236,14 @@ void gamek_image_render_glyph(
     uint32_t mask=0x80000000;
     uint8_t xi=w;
     switch (bytesperpixel) {
-      case 1: break;//TODO
-      case 2: break;//TODO
+      case 1: {
+          uint8_t *dstp=dstrow;
+          for (;xi-->0;dstp++,mask>>=1) if (src&mask) *dstp=pixel;
+        } break;
+      case 2: {
+          uint16_t *dstp=(uint16_t*)dstrow;
+          for (;xi-->0;dstp++,mask>>=1) if (src&mask) *dstp=pixel;
+        } break;
       case 4: {
           uint32_t *dstp=(uint32_t*)dstrow;
           for (;xi-->0;dstp++,mask>>=1) if (src&mask) *dstp=pixel;
@@ -253,6 +266,7 @@ uint8_t gamek_image_iterator_init(
   int16_t bytesperpixel;
   switch (image->fmt) {
     case GAMEK_IMGFMT_RGBX: bytesperpixel=4; break;
+    case GAMEK_IMGFMT_BGR332: bytesperpixel=1; break;
     default: return 0;
   }
   
@@ -293,4 +307,23 @@ uint8_t gamek_image_iterator_init(
   iter->major.p=iter->minor.p;
   
   return 1;
+}
+
+/* Image format properties.
+ */
+
+#ifndef BYTE_ORDER
+  #include <endian.h>
+#endif
+ 
+uint32_t gamek_image_pixel_from_rgba(uint8_t fmt,uint8_t r,uint8_t g,uint8_t b,uint8_t a) {
+  switch (fmt) {
+    #if BYTE_ORDER==BIG_ENDIAN
+      case GAMEK_IMGFMT_RGBX: return (r<<24)|(g<<16)|(b<<8)|a;
+    #else
+      case GAMEK_IMGFMT_RGBX: return r|(g<<8)|(b<<16)|(a<<24);
+    #endif
+    case GAMEK_IMGFMT_BGR332: return (b&0xe0)|((g>>3)&0x1c)|(r>>6);
+  }
+  return 0;
 }

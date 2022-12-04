@@ -40,6 +40,10 @@ void gamek_platform_audio_event(uint8_t chid,uint8_t opcode,uint8_t a,uint8_t b)
   // We lied about supporting audio. But could modify this hook if there's a reason to monitor sound effects coming from the game.
 }
 
+void gamek_platform_play_song(const void *v,uint16_t c) {}
+void gamek_platform_set_audio_wave(uint8_t waveid,const int16_t *v,uint16_t c) {}
+void gamek_platform_audio_configure(const void *v,uint16_t c) {}
+
 /* Main.
  */
  

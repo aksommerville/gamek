@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #define GAMEK_IMGFMT_RGBX 1 /* Serial order, regardless of host byte order. */
+#define GAMEK_IMGFMT_BGR332 2
 
 #define GAMEK_IMAGE_FLAG_WRITEABLE    0x01
 #define GAMEK_IMAGE_FLAG_OWNV         0x02
@@ -52,6 +53,8 @@ void gamek_image_render_glyph(
   uint32_t pixel
 );
 
+uint32_t gamek_image_pixel_from_rgba(uint8_t fmt,uint8_t r,uint8_t g,uint8_t b,uint8_t a);
+
 /* Iterator.
  * These read images bytewise.
  * TODO Are we going to need sub-byte pixels? Probably. That will take some more work here.
@@ -87,7 +90,7 @@ static inline uint32_t gamek_image_iterator_read(const struct gamek_image_iterat
 }
 
 static inline void gamek_image_iterator_write(struct gamek_image_iterator *iter,uint32_t pixel) {
-  if (iter->pixelsize==8) *(uint32_t*)iter->minor.p=pixel;
+  if (iter->pixelsize==8) *(uint8_t*)iter->minor.p=pixel;
   else if (iter->pixelsize==16) *(uint16_t*)iter->minor.p=pixel;
   else if (iter->pixelsize==32) *(uint32_t*)iter->minor.p=pixel;
 }

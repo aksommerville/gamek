@@ -198,3 +198,22 @@ int main(int argc,char **argv) {
   
   return gamek_linux.status;
 }
+
+/* Platform definition.
+ */
+ 
+const struct gamek_platform_details gamek_platform_details={
+  .name="linux",
+  .capabilities=
+    GAMEK_PLATFORM_CAPABILITY_TERMINATE|
+    GAMEK_PLATFORM_CAPABILITY_KEYBOARD|
+    GAMEK_PLATFORM_CAPABILITY_MOUSE|
+    GAMEK_PLATFORM_CAPABILITY_PLUG_INPUT|
+    GAMEK_PLATFORM_CAPABILITY_MULTIPLAYER|
+    GAMEK_PLATFORM_CAPABILITY_NETWORK|
+    GAMEK_PLATFORM_CAPABILITY_AUDIO|
+    GAMEK_PLATFORM_CAPABILITY_MIDI|
+    GAMEK_PLATFORM_CAPABILITY_LANGUAGE|
+    GAMEK_PLATFORM_CAPABILITY_STORAGE|
+  0,
+};

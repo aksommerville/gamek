@@ -21,6 +21,9 @@
 #if GAMEK_USE_akdrm
   #include "opt/akdrm/akdrm.h"
 #endif
+#if GAMEK_USE_mynth
+  #include "opt/mynth/mynth.h"
+#endif
 
 #define LINUX_UPDATE_RATE_HZ 60
 #define LINUX_SLEEP_LIMIT_US 20000 /* Each frame should be 16666, anything larger is an error somehow. */
@@ -66,7 +69,6 @@ extern struct gamek_linux {
   struct ossmidi *ossmidi;
   struct alsapcm *alsapcm;
   struct gamek_inmgr *inmgr;
-  //TODO synthesizer
   
 } gamek_linux;
 

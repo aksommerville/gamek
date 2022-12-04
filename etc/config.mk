@@ -2,7 +2,9 @@
 # Local configuration for gamek.
 
 #GAMEK_TARGETS:=generic linux tiny picosystem thumby web
-GAMEK_TARGETS:=generic linux
+GAMEK_TARGETS:=generic linux tiny
+
+run:linux-run-hello
 
 # --- linux ---
 # At least one of (GLX,DRM) must be enabled. Empty to disable.
@@ -10,4 +12,12 @@ GAMEK_TARGETS:=generic linux
 linux_USE_GLX:=1
 linux_USE_DRM:=1
 
-run:linux-run-hello
+# --- web ---
+web_WASI_SDK:=/home/andy/proj/thirdparty/wasi-sdk-16.0
+
+# --- tiny ---
+# https://arduino.cc
+tiny_ARDUINO_HOME:=/home/andy/.arduino15
+tiny_ARDUINO_IDE_HOME:=/home/andy/.local/share/umake/electronics/arduino/
+tiny_GCC_VERSION:=7-2017q4
+tiny_PORT:=ttyACM0

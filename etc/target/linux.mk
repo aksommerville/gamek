@@ -3,7 +3,8 @@ ifeq (,$(strip $(linux_USE_GLX) $(linux_USE_DRM)))
 endif
 
 # Units under src/opt to include.
-linux_OPT_ENABLE:=argv inmgr fs serial alsapcm ossmidi evdev
+#TODO Using 'mynth' for now, but eventually we'll want a fancier synth for capable platforms like Linux.
+linux_OPT_ENABLE:=argv inmgr fs serial alsapcm ossmidi evdev mynth
 ifneq (,$(strip $(linux_USE_GLX)))
   linux_OPT_ENABLE+=akx11
 endif
@@ -24,7 +25,7 @@ endif
 linux_CCWARN:=-Werror -Wimplicit
 linux_CC:=gcc $(linux_CCOPT) $(linux_CCDEF) $(linux_CCINC) $(linux_CCWARN)
 linux_LD:=gcc
-linux_LDPOST:=
+linux_LDPOST:=-lm
 ifneq (,$(strip $(linux_USE_GLX)))
   linux_LDPOST+=-lX11 -lGLX -lGL -lXinerama
 endif

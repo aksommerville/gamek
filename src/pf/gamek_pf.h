@@ -58,6 +58,14 @@ void gamek_platform_terminate(uint8_t status);
  */
 void gamek_platform_audio_event(uint8_t chid,uint8_t opcode,uint8_t a,uint8_t b);
 
+/* Play song, upload audio configuration.
+ * Formats and other requirements will vary depending on the platform's synthesizer.
+ * (TODO Get more specific here, once the synthesizers are written).
+ */
+void gamek_platform_play_song(const void *v,uint16_t c);
+void gamek_platform_set_audio_wave(uint8_t waveid,const int16_t *v,uint16_t c);
+void gamek_platform_audio_configure(const void *v,uint16_t c);
+
 /* Client hooks.
  * These are not part of the platform.
  * Your program must define (gamek_client), populated with the hooks for things you can do.
