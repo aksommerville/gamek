@@ -1,10 +1,11 @@
 # config.mk
 # Local configuration for gamek.
 
-#GAMEK_TARGETS:=generic linux tiny picosystem thumby web
-GAMEK_TARGETS:=generic linux tiny
+# Which targets are we building? See etc/target for options.
+GAMEK_TARGETS:=generic linux tiny web
 
 run:linux-run-hello
+serve:web-serve
 
 # --- linux ---
 # At least one of (GLX,DRM) must be enabled. Empty to disable.
@@ -14,6 +15,7 @@ linux_USE_DRM:=1
 
 # --- web ---
 web_WASI_SDK:=/home/andy/proj/thirdparty/wasi-sdk-16.0
+web_SERVER_COMMAND:=http-server -a localhost -p 8080 -c-1
 
 # --- tiny ---
 # https://arduino.cc

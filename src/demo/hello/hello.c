@@ -134,6 +134,9 @@ static void hello_draw_input(struct gamek_image *fb,int16_t x,int16_t y,uint16_t
   gamek_image_fill_rect(fb,x+ 5,y+ 4, 1,1,(input&GAMEK_BUTTON_AUX2)?color_button_on:color_button_off);
   gamek_image_fill_rect(fb,x+ 6,y+ 2, 1,1,(input&GAMEK_BUTTON_AUX3)?color_button_on:color_button_off);
 }
+
+static int16_t textx=2;
+static int16_t textdx=1;
  
 static uint8_t _hello_render(struct gamek_image *fb) {
   gamek_image_clear(fb);
@@ -151,9 +154,12 @@ static uint8_t _hello_render(struct gamek_image *fb) {
     hello_draw_input(fb,x,11,*input);
   }
   
-  gamek_font_render_string(fb, 2,19,gamek_image_pixel_from_rgba(fb->fmt,0xff,0x00,0x00,0xff),font_g06,"RED",3);
-  gamek_font_render_string(fb,18,19,gamek_image_pixel_from_rgba(fb->fmt,0x00,0xff,0x00,0xff),font_g06,"GREEN",5);
-  gamek_font_render_string(fb,45,19,gamek_image_pixel_from_rgba(fb->fmt,0x00,0x00,0xff,0xff),font_g06,"BLUE",4);
+  gamek_font_render_string(fb,textx+ 0,19,gamek_image_pixel_from_rgba(fb->fmt,0xff,0x00,0x00,0xff),font_g06,"RED",3);
+  gamek_font_render_string(fb,textx+16,19,gamek_image_pixel_from_rgba(fb->fmt,0x00,0xff,0x00,0xff),font_g06,"GREEN",5);
+  gamek_font_render_string(fb,textx+43,19,gamek_image_pixel_from_rgba(fb->fmt,0x00,0x00,0xff,0xff),font_g06,"BLUE",4);
+  textx+=textdx;
+  if ((textx<2)&&(textdx<0)) textdx=-textdx;
+  else if ((textx>30)&&(textdx>0)) textdx=-textdx;
   
   gamek_font_render_string(fb,2,28,gamek_image_pixel_from_rgba(fb->fmt,0x00,0x00,0x00,0xff),font_g06,"Welcome to gamek!",-1);
   char msg[256];

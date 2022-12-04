@@ -14,6 +14,9 @@ So the framework aims for a very small memory footprint, and minimal CPU waste.
 - - [x] tiny
 - - [ ] picosystem
 - - [ ] web
+- - - [ ] input
+- - - [ ] audio
+- - - [ ] pretty up
 - - [ ] macos
 - - [ ] mswin
 - - [ ] thumby
