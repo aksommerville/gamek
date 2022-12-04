@@ -62,6 +62,11 @@ all:$(web_HTDOCS_DEMOS)
 $(OUTDIR)/www/%.wasm:$(OUTDIR)/%.wasm;$(PRECMD) cp $< $@
 
 ifneq (,$(strip $(web_SERVER_COMMAND)))
+  # Plain "web-serve" builds everything and serves the output. That's usually what you want.
+  # Any sources you change while the server is running, the server doesn't know about them.
   web-serve:$(web_HTDOCS_DEMOS) $(web_HTDOCS);$(web_SERVER_COMMAND) $(OUTDIR)/www
 endif
 
+# "web-serve-dev" to serve static assets straight off the source, if you're tweaking them.
+# This will also re-invoke make when an output Wasm file is requested. Very convenient!
+web-serve-dev:$(web_ALL_EXES);src/pf/web/serve-dev.js --htdocs=src/pf/web/htdocs --demos="$(DEMOS)"

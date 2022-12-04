@@ -1,4 +1,51 @@
 body {
-  background-color: #222;
+  background-color: #000;
   color: #fff;
+  margin: 0;
+}
+
+.hidden {
+  display: none;
+}
+
+.errorMessage {
+  position: fixed;
+  width: 60vw;
+  height: 60vh;
+  left: 20vw;
+  top: 20vh;
+  padding: 1em;
+  background-color: #800;
+  color: #fff;
+  z-index: 100;
+  cursor: arrow;
+  user-select: none;
+  box-shadow: #000 0 0 1em;
+  border-radius: 1em;
+  font-family: monospace;
+  font-size: 8pt;
+}
+
+canvas.gameContainer {
+  width: 95vw;
+  margin-left: 2.5vw;
+  image-rendering: pixelated;
+  cursor: none;
+}
+
+.demoList {
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+}
+
+.demoList > li {
+  list-style-type: none;
+}
+
+.gameButton {
+  background-color: #888;
+}
+.gameButton.running {
+  background-color: #ff0;
 }

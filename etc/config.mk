@@ -6,6 +6,7 @@ GAMEK_TARGETS:=generic linux tiny web
 
 run:linux-run-hello
 serve:web-serve
+serve-dev:web-serve-dev
 
 # --- linux ---
 # At least one of (GLX,DRM) must be enabled. Empty to disable.
