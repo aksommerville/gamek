@@ -235,4 +235,23 @@ export class GamekController {
     if (!this.running) return;
     this.instance.exports.gamek_web_client_input_event(playerid, btnid, v);
   }
+  
+  onMidi(serial) {
+    if (!serial || (serial.length < 1)) return;
+    let chid, opcode, a, b;
+    opcode = serial[0] & 0xf0;
+    if ((opcode >= 0x80) && (opcode < 0xf0)) {
+      chid = serial[0] & 0x0f;
+      a = serial[1] || 0;
+      b = serial[2] || 0;
+    } else if (serial[0] === 0xff) {
+      opcode = 0xff;
+      chid = 0xff;
+      a = 0;
+      b = 0;
+    } else {
+      return;
+    }
+    this.instance.exports.gamek_web_client_midi_in(chid, opcode, a, b);
+  }
 }

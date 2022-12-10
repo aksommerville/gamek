@@ -17,13 +17,14 @@ export class GamekInput {
     this.unchangedDpadCount = 0;
     this.onKillTouchEvents = () => {};
     
+    this.midiAccess = null;
+    this.initMidi();
+    
     // This initial size of playerStates defines the limit of input players we can handle.
     // 4 is sensible, so is 1, and you can go up to 255.
     // The first entry is special, player zero, the aggregate state.
     this.playerStates = [0, 0, 0, 0, 0];
     
-    //TODO touch
-    //TODO midi
   }
   
   suspend() {
@@ -594,6 +595,37 @@ export class GamekInput {
   
   setMidiConfiguration(config) {
     //TODO
+  }
+  
+  initMidi() {
+    navigator.requestMIDIAccess().then((access) => {
+      this.midiAccess = access;
+      this.midiAccess.onstatechange = (event) => this.onMidiStateChange(event);
+      for (const [id, input] of this.midiAccess.inputs) this.onMidiStateChange({ port: input });
+      // We don't care about outputs:
+      //for (const [id, output] of this.midiAccess.outputs) this.onMidiStateChange({ port: output });
+    }).catch(e => console.log(`MIDI access denied`, e));
+  }
+  
+  onMidiStateChange(event) {
+    if (!event.port) return;
+    if (event.port.state === "connected") {
+      if (event.port.type === "input") {
+        //console.log(`New MIDI input: ${event.port.manufacturer} ${event.port.name}`, event.port);
+        event.port.onmidimessage = (message) => this.onMidiMessage(message);
+      } else if (event.port.type === "output") {
+        //console.log(`New MIDI output: ${event.port.manufacturer} ${event.port.name}`);
+      }
+    } else {
+      //console.log(`Lost MIDI device: ${event.port.manufacturer} ${event.port.name}`);
+      this.controller.onMidi([0xff]);
+    }
+  }
+  
+  onMidiMessage(message) {
+    if (!this.running) return;
+    // MDN says (message.data) will only contain a single MIDI message, and quick experimentation agrees. Great!
+    this.controller.onMidi(message.data);
   }
 }
 
