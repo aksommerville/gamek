@@ -6,6 +6,10 @@
 #ifndef GAMEK_PF_H
 #define GAMEK_PF_H
 
+#ifdef __cplusplus
+  extern "C" {
+#endif
+
 #include <stdint.h>
 #ifdef GAMEK_PLATFORM_HEADER
   #include GAMEK_PLATFORM_HEADER
@@ -66,6 +70,16 @@ void gamek_platform_play_song(const void *v,uint16_t c);
 void gamek_platform_set_audio_wave(uint8_t waveid,const int16_t *v,uint16_t c);
 void gamek_platform_audio_configure(const void *v,uint16_t c);
 
+/* Read and write files.
+ * Platform must provide a filesystem sandbox, so your path should generally be like "/hiscore.dat" or maybe "/data/0001.map".
+ * Writing a file, you have the option to do the whole thing at once, or a chunk, extending but not truncating.
+ * (seek<0) to append.
+ * Be prepared for failure; a platform might stub these out.
+ */
+int32_t gamek_platform_file_read(void *dst,int32_t dsta,const char *path,int32_t seek);
+int32_t gamek_platform_file_write_all(const char *path,const void *src,int32_t srcc);
+int32_t gamek_platform_file_write_part(const char *path,int32_t seek,const void *src,int srcc);
+
 /* Client hooks.
  * These are not part of the platform.
  * Your program must define (gamek_client), populated with the hooks for things you can do.
@@ -114,5 +128,9 @@ extern const struct gamek_client {
   void (*midi_in)(uint8_t chid,uint8_t opcode,uint8_t a,uint8_t b);
   
 } gamek_client;
+
+#ifdef __cplusplus
+  }
+#endif
 
 #endif

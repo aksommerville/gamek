@@ -44,6 +44,18 @@ void gamek_platform_play_song(const void *v,uint16_t c) {}
 void gamek_platform_set_audio_wave(uint8_t waveid,const int16_t *v,uint16_t c) {}
 void gamek_platform_audio_configure(const void *v,uint16_t c) {}
 
+int32_t gamek_platform_file_read(void *dst,int32_t dsta,const char *path,int32_t seek) {
+  return 0;
+}
+
+int32_t gamek_platform_file_write_all(const char *path,const void *src,int32_t srcc) {
+  return -1;
+}
+
+int32_t gamek_platform_file_write_part(const char *path,int32_t seek,const void *src,int srcc) {
+  return -1;
+}
+
 /* Main.
  */
  

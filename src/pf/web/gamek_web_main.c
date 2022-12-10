@@ -7,6 +7,8 @@ static uint8_t gamek_web_fb_storage[GAMEK_WEB_FB_LIMIT*GAMEK_WEB_FB_LIMIT*4];
  */
  
 int8_t gamek_web_client_init() {
+  
+  gamek_web_external_set_title(gamek_client.title);
 
   gamek_web.fb.w=gamek_client.fbw;
   gamek_web.fb.h=gamek_client.fbh;

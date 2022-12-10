@@ -43,6 +43,7 @@ extern struct gamek_linux {
   int audio_chanc;
   char *audio_device;
   int audio_buffer_size;
+  char *fs_sandbox; // Directory for client-accessible files.
   
   // Performance monitor:
   int uframec,vframec,aframec;

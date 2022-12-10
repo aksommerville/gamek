@@ -16,6 +16,10 @@ void setup() {
   gamek_tiny.fb.fmt=GAMEK_IMGFMT_BGR332;
   gamek_tiny.fb.stride=gamek_tiny.fb.w;
   gamek_tiny.fb.flags=GAMEK_IMAGE_FLAG_WRITEABLE;
+  
+  if (gamek_tiny.fs_sandbox=gamek_client.title) {
+    while (gamek_tiny.fs_sandbox[gamek_tiny.fs_sandboxc]) gamek_tiny.fs_sandboxc++;
+  }
 
   if (gamek_client.init) {
     if (gamek_client.init()<0) {

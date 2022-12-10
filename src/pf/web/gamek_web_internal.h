@@ -21,6 +21,7 @@ void gamek_web_client_midi_in(uint8_t chid,uint8_t opcode,uint8_t a,uint8_t b);
 
 /* Implemented by JS wrapper for us to call.
  */
+void gamek_web_external_set_title(const char *title); // it's inconvenient to read from a struct in JS
 void gamek_web_external_set_framebuffer(void *v,int w,int h);
 void gamek_web_external_console_log(const char *src);
 

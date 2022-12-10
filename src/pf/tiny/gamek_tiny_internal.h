@@ -15,6 +15,9 @@ extern struct gamek_tiny {
   uint16_t input;
   struct gamek_image fb;
   uint8_t fb_storage[GAMEK_TINY_FBW*GAMEK_TINY_FBH*GAMEK_TINY_BYTES_PER_PIXEL];
+  const char *fs_sandbox;
+  uint16_t fs_sandboxc;
+  uint8_t sdinit;
 } gamek_tiny;
 
 void tiny_audio_init();

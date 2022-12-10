@@ -10,4 +10,6 @@
 int gamek_file_read(void *dstpp,const char *path);
 int gamek_file_write(const char *path,const void *src,int srcc);
 
+int gamek_mkdirp(const char *path);
+
 #endif

@@ -34,6 +34,7 @@ class GamekController {
     this.fb = null; // Uint8Array pointing into module's memory
     this.fbw = 0;
     this.fbh = 0;
+    this.title = "untitled";
     this.context = null;
     this.imageData = null;
     this.enableLogging = true; // Print to console when the game does fprintf.
@@ -42,6 +43,7 @@ class GamekController {
     this.songc = null;
     this.input = new GamekInput();
     this.input.cb = (playerid, btnid, v) => this.onInput(playerid, btnid, v);
+    this.files = [];
   }
   
   loadBinary(bin) {
@@ -119,8 +121,12 @@ class GamekController {
         gamek_platform_play_song: (v, c) => this._gamek_platform_play_song(v, c),
         gamek_platform_set_audio_wave: (waveid, v, c) => this._gamek_platform_set_audio_wave(waveid, v, c),
         gamek_platform_audio_configure: (v, c) => this._gamek_platform_audio_configure(v, c),
+        gamek_platform_file_read: (dst, dsta, path, seek) => this._gamek_platform_file_read(dst, dsta, path, seek),
+        gamek_platform_file_write_all: (path, src, srcc) => this._gamek_platform_file_write_all(path, src, srcc),
+        gamek_platform_file_write_part: (path, seek, src, srcc) => this._gamek_platform_file_write_part(path, seek, src, srcc),
         
         gamek_web_external_console_log: (src) => this._gamek_web_external_console_log(src),
+        gamek_web_external_set_title: (v) => this._gamek_web_external_set_title(v),
         gamek_web_external_set_framebuffer: (v, w, h) => this._gamek_web_external_set_framebuffer(v, w, h),
       },
     };
@@ -149,6 +155,69 @@ class GamekController {
     this.audio.configure(src);
   }
   
+  _gamek_platform_file_read(dst, dsta, path, seek) {
+    const dstView = this.getMemoryView(dst, dsta);
+    if (!dstView) return -1;
+    const file = this.getFile(path, false);
+    if (!file) return -1;
+    const srcView = file.getView(seek, dsta, false);
+    if (!srcView) return -1;
+    const dstc = Math.min(dstView.byteLength, srcView.byteLength);
+    dstView.set(srcView, 0, dstc);
+    return dstc;
+  }
+  
+  _gamek_platform_file_write_all(path, src, srcc) {
+    const srcView = this.getMemoryView(src, srcc);
+    if (!srcView) return -1;
+    const file = this.getFile(path, true);
+    if (!file) return -1;
+    file.empty();
+    const dstView = file.getView(0, srcView.byteLength, true);
+    if (!dstView) return -1;
+    dstView.set(srcView);
+    file.persist();
+    return dstView.byteLength;
+  }
+  
+  _gamek_platform_file_write_part(path, seek, src, srcc) {
+    const srcView = this.getMemoryView(src, srcc);
+    if (!srcView) return -1;
+    const file = this.getFile(path, true);
+    if (!file) return -1;
+    const dstView = file.getView(seek, srcView.byteLength, true);
+    if (!dstView) return -1;
+    dstView.set(srcView);
+    file.persist();
+    return dstView.byteLength;
+  }
+  
+  getFile(pathAddr, create) {
+    const key = this.composeFileKey(pathAddr);
+    if (!key) return null;
+    let file = this.files.find(f => f.key === key);
+    if (file) return file;
+    
+    // Look up in localStorage (this doesn't count as 'create'ing).
+    const serial = window.localStorage.getItem(key);
+    if (serial) {
+      file = new GamekFile(key);
+      try {
+        file.decode(serial);
+      } catch (e) {
+        window.localStorage.removeItem(key);
+        if (!create) return null;
+      }
+      this.files.push(file);
+      return file;
+    }
+    
+    if (!create) return null;
+    file = new GamekFile(key);
+    this.files.push(file);
+    return file;
+  }
+  
   _gamek_web_external_console_log(src) {
     if (!this.enableLogging) return;
     try {
@@ -171,6 +240,14 @@ class GamekController {
     this.fbw = w;
     this.fbh = h;
     this.imageData = null;
+  }
+  
+  _gamek_web_external_set_title(v) {
+    try {
+      const title = this.readStaticCString(v);
+      if (!title) return;
+      this.title = title;
+    } catch (e) {}
   }
   
   getMemoryView(v, c) {
@@ -219,9 +296,58 @@ class GamekController {
     return new TextDecoder().decode(new Uint8Array(buffer, p, c));
   }
   
+  composeFileKey(pathAddr) {
+    try {
+      if (!this.title) return null;
+      const path = this.readStaticCString(pathAddr);
+      if (!path) return null;
+      return this.title + ":" + path;
+    } catch (e) { return null; }
+  }
+  
   onInput(playerid, btnid, v) {
     if (!this.running) return;
     this.instance.exports.gamek_web_client_input_event(playerid, btnid, v);
+  }
+}
+
+class GamekFile {
+  constructor(key) {
+    this.key = key;
+    this.buffer = new ArrayBuffer(0);
+  }
+  
+  empty() {
+    this.buffer = new ArrayBuffer(0);
+  }
+  
+  decode(serial) {
+    const view = new TextEncoder("iso-8859-1").encode(serial);
+    this.buffer = view.buffer;
+  }
+  
+  getView(p, c, extend) {
+    if (p < 0) return null;
+    if (c < 0) return null;
+    const reqLimit = p + c;
+    if (reqLimit > this.buffer.byteLength) {
+      if (extend) {
+        const nv = new ArrayBuffer(reqLimit);
+        const dstView = new Uint8Array(nv, 0, this.buffer.byteLength);
+        const srcView = new Uint8Array(this.buffer);
+        dstView.set(srcView);
+        this.buffer = nv;
+      } else {
+        c = this.buffer.byteLength - p;
+        if (c < 1) return new Uint8Array(0);
+      }
+    }
+    return new Uint8Array(this.buffer, p, c);
+  }
+  
+  persist() {
+    const serial = new TextDecoder("iso-8859-1").decode(this.buffer);
+    window.localStorage.setItem(this.key, serial);
   }
 }
 
@@ -252,20 +378,31 @@ class GamekAudio {
     this.running = false;
     this.releaseAll();
     this.context.suspend();
+    this.songNextTime = 0;
   }
   
   resume() {
     if (this.running) return;
     this.running = true;
     this.context.resume();
+    if (!this.songNextTime) this.songNextTime = Date.now();
   }
   
   updateSong() {
     this.removeDefunctVoices();
+    
     // Unlike most of my C synthesizers, this one has song timing completely independent of the signal graph.
     // Events might miss their mark by up to one video frame.
     // We will manage clocks such that that timing error does not accumulate.
-    if (!this.running) return;
+    // Track when (running) goes false, and reset the clock. Otherwise the notes pile up during a pause and all play at once on resume :(
+    if (!this.running) {
+      this.songNextTime = 0;
+      return;
+    } else if (!this.songNextTime) {
+      this.songNextTime = Date.now();
+      return;
+    }
+    
     for (;;) {
       if (!this.song) return;
       if (this.songNextTime > Date.now()) return;

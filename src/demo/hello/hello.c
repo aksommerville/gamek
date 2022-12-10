@@ -66,6 +66,7 @@ struct gamek_image smile={
 
 static uint8_t cursor_visible=0;
 static uint16_t inputv[5]={0};
+static uint16_t pvinput=0;
 
 /* Init.
  */
@@ -107,7 +108,34 @@ static int8_t _hello_init() {
 /* Update.
  */
  
+static uint8_t savep=10;
+static char message[20]={0};
+ 
 static void _hello_update() {
+  if (inputv[0]!=pvinput) {
+    if ((inputv[0]&GAMEK_BUTTON_SOUTH)&&!(pvinput&GAMEK_BUTTON_SOUTH)) {
+      int err=gamek_platform_file_write_part("/save.stt",10,"ABCDEFG",7);
+      if (err!=7) strcpy(message,"W ERR");
+      else strcpy(message,"wrote");
+    }
+    if ((inputv[0]&GAMEK_BUTTON_WEST)&&!(pvinput&GAMEK_BUTTON_WEST)) {
+      int err=gamek_platform_file_write_part("/save.stt",20,"ZYXWVUT",7);
+      if (err!=7) strcpy(message,"W ERR");
+      else strcpy(message,"wrote");
+    }
+    if ((inputv[0]&GAMEK_BUTTON_DOWN)&&!(pvinput&GAMEK_BUTTON_DOWN)) {
+      int c=gamek_platform_file_read(message,7,"/save.stt",savep);
+      if (c==7) {
+        message[7]=0;
+        fprintf(stderr,"read ok\n");
+      } else {
+        strcpy(message,"failed");
+        fprintf(stderr,"read failed (%d)\n",c);
+      }
+      savep=(savep==10)?20:10;
+    }
+    pvinput=inputv[0];
+  }
 }
 
 /* Render.
@@ -168,6 +196,8 @@ static uint8_t _hello_render(struct gamek_image *fb) {
   char msg[256];
   int msgc=snprintf(msg,sizeof(msg),"Platform: %s",gamek_platform_details.name);
   if ((msgc>0)&&(msgc<sizeof(msg))) gamek_font_render_string(fb,2,37,gamek_image_pixel_from_rgba(fb->fmt,0x00,0x80,0x00,0xff),font_g06,msg,msgc);
+  
+  gamek_font_render_string(fb,2,46,0,font_g06,message,-1);
   
   return 1;
 }

@@ -20,6 +20,7 @@ static void linux_cleanup() {
   gamek_inmgr_del(gamek_linux.inmgr);
   if (gamek_linux.input_cfg_path) free(gamek_linux.input_cfg_path);
   if (gamek_linux.audio_device) free(gamek_linux.audio_device);
+  if (gamek_linux.fs_sandbox) free(gamek_linux.fs_sandbox);
 }
 
 /* Signals.
@@ -49,6 +50,7 @@ static void linux_print_help(const char *topic,int topicc) {
     "  --audio-chanc=1|2       Channel count.\n"
     "  --audio-device=NAME     eg 'pcmC0D0p', see /dev/snd.\n"
     "  --audio-buffer=INT      Audio buffer size in frames.\n"
+    "  --fs-sandbox=PATH       Directory accessible to the game.\n"
     "\n"
     "DEFAULT KEYBOARD MAPPING:\n"
     "  ESC      Quit\n"
@@ -106,6 +108,18 @@ static int _cb_argv(const char *k,int kc,const char *v,int vc,int vn,void *userd
     if (!(gamek_linux.audio_device=malloc(vc+1))) return -1;
     memcpy(gamek_linux.audio_device,v,vc);
     gamek_linux.audio_device[vc]=0;
+    return 0;
+  }
+  
+  if ((kc==10)&&!memcmp(k,"fs-sandbox",10)) {
+    if (gamek_linux.fs_sandbox) free(gamek_linux.fs_sandbox);
+    if (vc) {
+      if (!(gamek_linux.fs_sandbox=malloc(vc+1))) return -1;
+      memcpy(gamek_linux.fs_sandbox,v,vc);
+      gamek_linux.fs_sandbox[vc]=0;
+    } else {
+      gamek_linux.fs_sandbox=0;
+    }
     return 0;
   }
   

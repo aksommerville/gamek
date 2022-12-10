@@ -9,7 +9,7 @@ So the framework aims for a very small memory footprint, and minimal CPU waste.
 
 - [ ] Good quality synthesizer for PCs.
 - [x] Minimal synthesizer for Tiny.
-- [ ] inmgr: Override channel ID per device. Or maybe not? Not sure I want this.
+- [ ] inmgr midi: Override channel ID per device. Or maybe not? Not sure I want this.
 - [ ] Other platforms
 - - [x] tiny
 - - [ ] picosystem
@@ -28,7 +28,7 @@ So the framework aims for a very small memory footprint, and minimal CPU waste.
 - [x] Font
 - [ ] Storage, new platform API.
 - [ ] Network?
-- [ ] Compile-time tooling for data.
+- [x] Compile-time tooling for data.
 - [ ] Helper to spawn a new project.
 - [x] tiny: Prevent interference with synthesizer while update in progress.
 - [ ] mynth: Generate and provide wave table.
