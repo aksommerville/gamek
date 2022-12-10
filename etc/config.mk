@@ -17,6 +17,8 @@ linux_USE_DRM:=1
 # --- web ---
 web_WASI_SDK:=/home/andy/proj/thirdparty/wasi-sdk-16.0
 web_SERVER_COMMAND:=http-server -a localhost -p 8080 -c-1
+web_DEV_HOST:=
+web_DEV_PORT:=8080
 
 # --- tiny ---
 # https://arduino.cc

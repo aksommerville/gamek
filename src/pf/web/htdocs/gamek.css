@@ -26,8 +26,42 @@ body {
   font-size: 8pt;
 }
 
+.editInputModal {
+  position: fixed;
+  width: 60vw;
+  height: 60vh;
+  left: 20vw;
+  top: 20vh;
+  padding: 1em;
+  background-color: #ccc;
+  color: #000;
+  z-index: 100;
+  cursor: arrow;
+  box-shadow: #000 0 0 1em;
+  border-radius: 1em;
+}
+
+.editInputModal textarea {
+  display: block;
+  width: 100%;
+  min-height: 200px;
+  font-family: monospace;
+  font-size: 8pt;
+}
+
+.toast {
+  position: fixed;
+  width: 90vw;
+  left: 5vw;
+  bottom: 5vh;
+  background-color: #800;
+  color: #fff;
+  pointer-events: none;
+}
+
 canvas.gameContainer {
   width: 95vw;
+  max-width: 100vh;
   margin-left: 2.5vw;
   image-rendering: pixelated;
   cursor: none;

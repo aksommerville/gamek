@@ -14,10 +14,11 @@ So the framework aims for a very small memory footprint, and minimal CPU waste.
 - - [x] tiny
 - - [ ] picosystem
 - - [ ] web
-- - - [ ] key mapping
-- - - [ ] gamepad
+- - - [x] key mapping
+- - - [x] gamepad
 - - - [ ] touch input
 - - - [ ] midi input
+- - - [ ] Friendly input mapping editor. Optional, don't include in Gamek core.
 - - - [ ] audio
 - - - [x] fullscreen toggle
 - - - [x] pretty up

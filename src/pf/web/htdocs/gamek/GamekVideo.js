@@ -9,6 +9,7 @@ export class GamekVideo {
     this.fbw = 0;
     this.fbh = 0;
     this.running = false;
+    this.frameRequestPending = false;
   }
   
   installInDom(canvas) {
@@ -23,7 +24,10 @@ export class GamekVideo {
   resume() {
     if (this.running) return;
     this.running = true;
-    window.requestAnimationFrame(() => this.update());
+    if (!this.frameRequestPending) {
+      this.frameRequestPending = true;
+      window.requestAnimationFrame(() => this.update());
+    }
   }
   
   suspend() {
@@ -32,8 +36,10 @@ export class GamekVideo {
   }
   
   update() {
+    this.frameRequestPending = false;
     if (!this.running) return;
     if (!this.controller.update()) return;
+    this.frameRequestPending = true;
     window.requestAnimationFrame(() => this.update());
   }
   

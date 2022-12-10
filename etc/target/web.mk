@@ -69,4 +69,4 @@ endif
 
 # "web-serve-dev" to serve static assets straight off the source, if you're tweaking them.
 # This will also re-invoke make when an output Wasm file is requested. Very convenient!
-web-serve-dev:$(web_ALL_EXES);src/pf/web/serve-dev.js --htdocs=src/pf/web/htdocs --demos="$(DEMOS)"
+web-serve-dev:$(web_ALL_EXES);src/pf/web/serve-dev.js --htdocs=src/pf/web/htdocs --demos="$(DEMOS)" --host=$(web_DEV_HOST) --port=$(web_DEV_PORT)

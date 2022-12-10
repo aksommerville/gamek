@@ -67,6 +67,7 @@ export class GamekController {
       this.video.applyFramebuffer();
     }
     this.audio.update();
+    this.input.update();
     return true;
   }
   

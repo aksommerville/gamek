@@ -11,7 +11,16 @@ import { GamekController } from "./GamekController.js";
  *     readLocalStorage: boolean
  *     writeLocalStorage: boolean
  *   input:
- *     keyMap: { [KeyCode]: [playerid, btnid] }
+ *     getConfiguration(): Config
+ *     setConfiguration(Config): void
+ *     onKillTouchEvents: () => {} ; Replace this to get notified when we disable touch due to dpad triple tap.
+ *     Config:
+ *       keyboard: { key:string, player:integer, button:string }[]
+ *       gamepads: { id:string, axes:string[], buttons:string[] }[]
+ *         (axes) and (buttons) are indexed the same as the device exposed by Gamepad API.
+ *         Values are empty, a button name, or for axes "HORZ" or "VERT".
+ *       touch: TODO
+ *       midi: TODO
  */
 
 /* Create a new Gamek runtime using the Wasm file (bin), and attach it to <canvas> element (canvas).
