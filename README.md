@@ -21,12 +21,13 @@ So the framework aims for a very small memory footprint, and minimal CPU waste.
 - - - [ ] audio
 - - - [x] fullscreen toggle
 - - - [x] pretty up
+- - - [ ] When browser window loses focus, song player start skipping. Is there a DOM event for this? Pause when unfocussed.
 - - [ ] macos
 - - [ ] mswin
 - - [ ] thumby
 - - [x] generic (headless, dummy drivers)
 - [x] Font
-- [ ] Storage, new platform API.
+- [x] Storage, new platform API.
 - [ ] Network?
 - [x] Compile-time tooling for data.
 - [ ] Helper to spawn a new project.

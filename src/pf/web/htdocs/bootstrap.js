@@ -1,4 +1,6 @@
-import { gamek_init } from "./Gamek.js";
+import { gamek_init } from "./gamek/gamek.js";
+
+let controller = null;
 
 function showError(message) {
   const element = document.querySelector(".errorMessage");
@@ -30,7 +32,9 @@ function loadDemo(name) {
     }
     
     // Here's the main event, how to run gamek:
-    gamek_init(gameContainer, bin);
+    gamek_init(gameContainer, bin).then((ctl) => {
+      controller = ctl;
+    });
     
   }).catch(e => {
     e.json().then(details => {
@@ -40,7 +44,6 @@ function loadDemo(name) {
 }
 
 function hardPause(pause) {
-  const controller = document.querySelector("canvas.gameContainer")?._gamek_controller;
   if (!controller) return;
   if (pause) controller.end();
   else controller.begin();
