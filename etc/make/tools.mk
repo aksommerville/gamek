@@ -15,7 +15,7 @@ TOOL_CCINC:=-Isrc -I$(MIDDIR)
 TOOL_CCWARN:=-Werror -Wimplicit
 TOOL_CC:=gcc $(TOOL_CCOPT) $(TOOL_CCDEF) $(TOOL_CCINC) $(TOOL_CCWARN)
 TOOL_LD:=gcc
-TOOL_LDPOST:=-lz
+TOOL_LDPOST:=-lz -lm
 
 TOOL_SRCFILES:=$(filter src/tool/% $(foreach U,$(TOOL_OPT_ENABLE),src/opt/$U/%),$(SRCFILES))
   

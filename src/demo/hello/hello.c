@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 extern const uint8_t font_g06[];
+extern const uint8_t tangled_vine[]; // song
 
 /* See etc/doc/mynth.txt
   00000000                   End of song.
@@ -88,15 +89,17 @@ static int8_t _hello_init() {
   gamek_platform_audio_event(0,0xb0,0x2d,0xa0); // atkvhi
   gamek_platform_audio_event(0,0xb0,0x0f,0x10); // susvlo
   gamek_platform_audio_event(0,0xb0,0x2f,0x30); // susvhi
-  gamek_platform_audio_event(0,0xb0,0x10,0x10); // rlsclo (8ms intervals)
-  gamek_platform_audio_event(0,0xb0,0x30,0xf0); // rlschi
+  gamek_platform_audio_event(0,0xb0,0x10,0x08); // rlsclo (8ms intervals)
+  gamek_platform_audio_event(0,0xb0,0x30,0x10); // rlschi
   gamek_platform_audio_event(0,0xb0,0x40,0x40); // enable sustain
   gamek_platform_audio_event(0,0xb0,0x46,0x00); // wave
   gamek_platform_audio_event(0,0xb0,0x47,0x14); // wheel range
   gamek_platform_audio_event(0,0xb0,0x48,0x01); // warble range
   gamek_platform_audio_event(0,0xb0,0x49,0x02); // warble rate
+  /**/
   
-  gamek_platform_play_song(mysong,sizeof(mysong));
+  //gamek_platform_play_song(mysong,sizeof(mysong));
+  gamek_platform_play_song(tangled_vine,0xffff);
 
   return 0;
 }
