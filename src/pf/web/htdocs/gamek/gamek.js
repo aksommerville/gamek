@@ -5,8 +5,11 @@
 import { GamekController } from "./GamekController.js";
 /* Important public bits of GamekController:
  *   enableLogging: boolean // if true (default), fprintf in the game prints as console.log here.
+ *
  *   begin(): void // A new controller is already begun.
  *   end(): void // Hard pause. Safe to 'begin' again after.
+ *   // We don't react to visibilitychange events, but you should.
+ *
  *   files:
  *     readLocalStorage: boolean
  *     writeLocalStorage: boolean

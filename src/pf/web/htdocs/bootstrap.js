@@ -66,67 +66,6 @@ function hardPause(pause) {
   else controller.begin();
 }
 
-/* Very cheesy input config
-function editInput(original) {
-  if (editInputInProgress) return Promise.reject();
-  const element = document.querySelector(".editInputModal");
-  if (!element) return;
-  element.querySelector(".error").innerHTML = "";
-  element.querySelector("textarea[name='text']").value = JSON.stringify(original, null, 2);
-  element.classList.remove("hidden");
-  return new Promise((resolve) => { editInputInProgress = resolve; });
-}
-
-function editInputOk() {
-  if (!editInputInProgress) return;
-  const element = document.querySelector(".editInputModal");
-  const text = element.querySelector("textarea[name='text']").value;
-  const cb = editInputInProgress;
-  editInputInProgress = null;
-  try {
-    const obj = JSON.parse(text);
-    if (!obj || (typeof(obj) !== "object")) throw "must be an object";
-    cb(obj);
-  } catch (e) {
-    element.querySelector(".error").innerText = e;
-    editInputInProgress = cb;
-    return;
-  }
-  element.classList.add("hidden");
-}
-
-function editInputCancel() {
-  if (!editInputInProgress) return;
-  const element = document.querySelector(".editInputModal");
-  element.classList.add("hidden");
-  const cb = editInputInProgress;
-  editInputInProgress = null;
-  cb(null);
-}
-
-function configureInput() {
-  let original;
-  if (controller) {
-    original = controller.input.getConfiguration();
-  } else {
-    try {
-      original = JSON.parse(window.localStorage.getItem("gamekInputConfig"));
-    } catch (e) {
-      original = {};
-    }
-  }
-  if (!original || (typeof(original) !== "object")) original = {};
-  editInput(original).then((edited) => {
-    if (edited) {
-      if (controller) {
-        controller.input.setConfiguration(edited);
-      }
-      window.localStorage.setItem("gamekInputConfig", JSON.stringify(edited));
-    }
-  }).catch((e) => { console.error(e); });
-}
-/**/
-
 function configureInput() {
   let original;
   if (controller) {
@@ -215,16 +154,17 @@ window.addEventListener("load", () => {
     
     spawn(document.body, "DIV", ["errorMessage", "hidden"], { "on-click": () => showError(null) });
     
-    /*XXX very cheesy input config
-    const editInputModal = spawn(document.body, "DIV", ["editInputModal", "hidden"]);
-    spawn(editInputModal, "DIV", "TODO: Friendly user input editing.");
-    spawn(editInputModal, "TEXTAREA", { name: "text" });
-    spawn(editInputModal, "BUTTON", "OK", { "on-click": () => editInputOk() });
-    spawn(editInputModal, "BUTTON", "Cancel", { "on-click": () => editInputCancel() });
-    spawn(editInputModal, "DIV", ["error"]);
-    /**/
-    
     spawn(document.body, "DIV", ["toast", "hidden"]);
 
   }).catch(e => console.error(e));
+});
+
+window.addEventListener("visibilitychange", (event) => {
+  if (document.hidden) {
+    const checkbox = document.querySelector("input.hardPause");
+    if (checkbox) {
+      checkbox.checked = true;
+      checkbox.dispatchEvent(new Event("change"));
+    }
+  }
 });
