@@ -1,4 +1,5 @@
 import { gamek_init } from "./gamek/gamek.js";
+import { gamekInputConfigModal } from "./gamekInputConfigModal.js";
 
 let controller = null;
 let editInputInProgress = null; // 'resolve' hook if modal up
@@ -65,6 +66,7 @@ function hardPause(pause) {
   else controller.begin();
 }
 
+/* Very cheesy input config
 function editInput(original) {
   if (editInputInProgress) return Promise.reject();
   const element = document.querySelector(".editInputModal");
@@ -115,7 +117,6 @@ function configureInput() {
   }
   if (!original || (typeof(original) !== "object")) original = {};
   editInput(original).then((edited) => {
-    console.log(`editInput ok`, { original, edited, controller });
     if (edited) {
       if (controller) {
         controller.input.setConfiguration(edited);
@@ -123,6 +124,31 @@ function configureInput() {
       window.localStorage.setItem("gamekInputConfig", JSON.stringify(edited));
     }
   }).catch((e) => { console.error(e); });
+}
+/**/
+
+function configureInput() {
+  let original;
+  if (controller) {
+    original = controller.input.getConfiguration();
+  } else {
+    try {
+      original = JSON.parse(window.localStorage.getItem("gamekInputConfig"));
+    } catch (e) {
+      original = {};
+    }
+  }
+  if (!original || (typeof(original) !== "object")) original = {};
+  gamekInputConfigModal(original, controller).then((edited) => {
+    if (edited) {
+      if (controller) {
+        controller.input.setConfiguration(edited);
+      }
+      window.localStorage.setItem("gamekInputConfig", JSON.stringify(edited));
+    }
+  }).catch((e) => {
+    console.error(`...error from input modal`, e);
+  });
 }
 
 function enterFullscreen() {
@@ -189,17 +215,16 @@ window.addEventListener("load", () => {
     
     spawn(document.body, "DIV", ["errorMessage", "hidden"], { "on-click": () => showError(null) });
     
+    /*XXX very cheesy input config
     const editInputModal = spawn(document.body, "DIV", ["editInputModal", "hidden"]);
     spawn(editInputModal, "DIV", "TODO: Friendly user input editing.");
     spawn(editInputModal, "TEXTAREA", { name: "text" });
     spawn(editInputModal, "BUTTON", "OK", { "on-click": () => editInputOk() });
     spawn(editInputModal, "BUTTON", "Cancel", { "on-click": () => editInputCancel() });
     spawn(editInputModal, "DIV", ["error"]);
+    /**/
     
     spawn(document.body, "DIV", ["toast", "hidden"]);
-    
-    //XXX
-    spawn(document.body, "DIV", ["xxxlog"]);
 
   }).catch(e => console.error(e));
 });

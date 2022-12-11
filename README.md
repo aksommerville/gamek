@@ -16,6 +16,7 @@ So the framework aims for a very small memory footprint, and minimal CPU waste.
 - - - [ ] Friendly input mapping editor. Optional, don't include in Gamek core.
 - - - [ ] audio
 - - - [ ] When browser window loses focus, song player start skipping. Is there a DOM event for this? Pause when unfocussed.
+- - - [ ] Input config only really works while the VM is running. Can we separate the input manager such that it runs at all times?
 - - [ ] macos
 - - [ ] mswin
 - - [ ] thumby

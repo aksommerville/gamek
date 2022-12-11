@@ -14,6 +14,7 @@ import { GamekController } from "./GamekController.js";
  *     getConfiguration(): Config
  *     setConfiguration(Config): void
  *     onKillTouchEvents: () => {} ; Replace this to get notified when we disable touch due to dpad triple tap.
+ *     listen(cb): listenerid // cb(deviceName, buttonName, value), raw pre-map events
  *     Config:
  *       keyboard: { key:string, player:integer, button:string }[]
  *       gamepads: { id:string, axes:string[], buttons:string[] }[]

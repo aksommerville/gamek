@@ -10,6 +10,7 @@ export class GamekInput {
     this.gamepads = []; // id (Gamepad instances evidently are not permanent)
     this.gamepadMaps = []; // [ gamepad index, "axis"|"axislo"|"axishi"|"button", srcbtnid, playerid, dstbtnid, state ]
     this.gamepadTemplates = []; // { id, axes, buttons }
+    this.rawGamepadState = []; // [gamepad index, "axis"|"button", index, value] nonzero values only, only updates if someone is listening.
     
     this.touchEventListener = null;
     this.touches = []; // { identifier, btnid, startX, startY, hat:0..7|null, changed }
@@ -25,6 +26,8 @@ export class GamekInput {
     // The first entry is special, player zero, the aggregate state.
     this.playerStates = [0, 0, 0, 0, 0];
     
+    this.nextListenerId = 1;
+    this.listeners = [];
   }
   
   suspend() {
@@ -90,6 +93,23 @@ export class GamekInput {
       this.setTouchConfiguration(null);
       this.setMidiConfiguration(null);
     }
+  }
+  
+  /* Register a callback for receiving raw input events, eg for interactive mapping support.
+   */
+  listen(cb) {
+    // reset raw state on the first listen, in case it got dirty when no one was listening.
+    if (!this.listeners.length) this.rawGamepadState = [];
+    const id = this.nextListenerId++;
+    this.listeners.push({ id, cb });
+    return id;
+  }
+  
+  unlisten(id) {
+    const p = this.listeners.findIndex(l => l.id === id);
+    if (p < 0) return;
+    this.listeners.splice(p, 1);
+    if (!this.listeners.length) this.rawGamepadState = [];
   }
   
   sendPlayerEvent(playerid, btnid, v) {
@@ -223,9 +243,10 @@ export class GamekInput {
   
   onKey(event) {
     if (event.repeat) return;
+    const v = (event.type === "keydown") ? 1 : 0;
+    for (const { cb } of this.listeners) cb("Keyboard", event.code, v);
     const map = this.keyMap[event.code];
     if (!map) return;
-    const v = (event.type === "keydown") ? 1 : 0;
     this.setPlayerButton(map[0], map[1], v);
     event.preventDefault();
   }
@@ -313,6 +334,37 @@ export class GamekInput {
           } break;
       }
     }
+    if (this.listeners.length) {
+      // To report raw events, we have to iterate everything. It's a pain.
+      const axisThreshold = 0.1;
+      for (const gamepad of gamepads) {
+        if (!gamepad) continue;
+        for (let i=gamepad.axes.length; i-->0; ) {
+          const nv = (gamepad.axes[i] >= axisThreshold) ? 1 : (gamepad.axes[i] <= -axisThreshold) ? -1 : 0;
+          let state = this.rawGamepadState.find(s => ((s[0] === gamepad.index) && (s[1] === "axis") && (s[2] === i)));
+          if (state) {
+            if (state[3] === nv) continue;
+            state[3] = nv;
+            for (const { cb } of this.listeners) cb(gamepad.id, `axis-${i}`, nv);
+          } else if (nv) {
+            this.rawGamepadState.push([gamepad.index, "axis", i, nv]);
+            for (const { cb } of this.listeners) cb(gamepad.id, `axis-${i}`, nv);
+          }
+        }
+        for (let i=gamepad.buttons.length; i-->0; ) {
+          const nv = gamepad.buttons[i].pressed ? 1 : 0;
+          let state = this.rawGamepadState.find(s => ((s[0] === gamepad.index) && (s[1] === "button") && (s[2] === i)));
+          if (state) {
+            if (state[3] === nv) continue;
+            state[3] = nv;
+            for (const { cb } of this.listeners) cb(gamepad.id, `btn-${i}`, nv);
+          } else if (nv) {
+            this.rawGamepadState.push([gamepad.index, "button", i, nv]);
+            for (const { cb } of this.listeners) cb(gamepad.id, `btn-${i}`, nv);
+          }
+        }
+      }
+    }
   }
   
   onGamepadConnection(event) {
@@ -330,7 +382,6 @@ export class GamekInput {
   
   dropGamepadState(gamepad) {
     const id = gamepad.id;
-    console.log(`dropGamepadState ${id}`);
     for (let i=this.gamepadMaps.length; i-->0; ) {
       const map = this.gamepadMaps[i];
       if (map[0] !== id) continue;
@@ -339,6 +390,7 @@ export class GamekInput {
         this.setPlayerButton(map[3], map[4], 0);
       }
     }
+    this.rawGamepadState = this.rawGamepadState.filter(s => (s[0] !== gamepad.index));
   }
   
   addGamepadMaps(gamepad) {
@@ -349,6 +401,16 @@ export class GamekInput {
     if (!tm) {
       tm = this.synthesizeGamepadTemplate(gamepad);
       this.gamepadTemplates.push(tm);
+      if (this.listeners.length) {
+        const config = {
+          id: tm.id,
+          axes: tm.axes.map(btnid => this.reprButton(btnid)),
+          buttons: tm.buttons.map(btnid => this.reprButton(btnid)),
+        };
+        for (const { cb } of this.listeners) {
+          cb("addGamepad", config);
+        }
+      }
     }
     
     // Apply template.
