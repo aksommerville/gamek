@@ -4,7 +4,7 @@
 # Which targets are we building? See etc/target for options.
 GAMEK_TARGETS:=generic linux tiny web
 
-run:linux-run-hello
+run:linux-run-invaders
 serve:web-serve
 serve-dev:web-serve-dev
 

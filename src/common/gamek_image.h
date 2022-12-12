@@ -9,6 +9,10 @@
 #define GAMEK_IMGFMT_RGBX 1 /* Serial order, regardless of host byte order. */
 #define GAMEK_IMGFMT_BGR332 2
 
+#define GAMEK_FOR_EACH_IMGFMT \
+  _(RGBX) \
+  _(BGR332)
+
 #define GAMEK_IMAGE_FLAG_WRITEABLE    0x01
 #define GAMEK_IMAGE_FLAG_OWNV         0x02
 #define GAMEK_IMAGE_FLAG_TRANSPARENT  0x04
@@ -24,6 +28,20 @@ struct gamek_image {
   uint8_t fmt;
   uint8_t flags;
 };
+
+/* Wrap an encoded image, as produced by our 'mkdata' tool, in a gamek_image.
+ * (srcc) is optional. We will not read beyond that, but images are supposed to be self-terminating,
+ * so as long as you trust the input, you can use (srcc==0x7fffffff).
+ * The image we produce is WEAK, it points into the provided serial data and is not WRITEABLE.
+ *
+ * Serial format:
+ *   1 fmt
+ *   1 flags (WRITEABLE and OWNV are ignored, both always zero)
+ *   2 w
+ *   2 h
+ *   ... pixels. Must use minimum stride.
+ */
+int8_t gamek_image_decode(struct gamek_image *image,const void *src,int32_t srcc);
 
 /* Rendering.
  **************************************************************/

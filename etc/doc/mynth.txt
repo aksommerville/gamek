@@ -24,6 +24,7 @@ Running channels can be configured with Control Changes.
   0x47 Wheel range, dimes.
   0x48 Warble range, dimes.
   0x49 Warble rate, hz.
+  0x4a Warble phase: 0=rising ... 0x40=falling ... 0x7f=rising
   0x78 All Sound Off
   0x79 Reset Controllers
   0x7b All Notes Off

@@ -14,14 +14,14 @@ generic_CCINC:=-Isrc -I$(MIDDIR)
 generic_CCWARN:=-Werror -Wimplicit
 generic_CC:=gcc $(generic_CCOPT) $(generic_CCDEF) $(generic_CCINC) $(generic_CCWARN)
 generic_LD:=gcc
-generic_LDPOST:=
+generic_LDPOST:=-lm
 
 # Digest data files.
 # All data files get turned into C code and compiled like sources.
-generic_DATA_SRC:=$(filter src/data/%,$(SRCFILES))
-generic_DATA_C:=$(patsubst src/data/%,$(MIDDIR)/data/%.c,$(generic_DATA_SRC))
+generic_DATA_SRC:=$(filter src/data/% %.png %.mid,$(SRCFILES))
+generic_DATA_C:=$(patsubst src/%,$(MIDDIR)/%.c,$(generic_DATA_SRC))
 # Rules for more specific patterns could go here, eg if you need some other mkdata flag for images or whatever.
-$(MIDDIR)/data/%.c:src/data/% $(TOOL_mkdata_EXE);$(PRECMD) $(TOOL_mkdata_EXE) -o$@ -i$<
+$(MIDDIR)/%.c:src/% $(TOOL_mkdata_EXE);$(PRECMD) $(TOOL_mkdata_EXE) -o$@ -i$<
 
 # A "target" isn't necessarily a "platform", but usually it is.
 # Most targets should begin with this:

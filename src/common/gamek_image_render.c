@@ -308,22 +308,3 @@ uint8_t gamek_image_iterator_init(
   
   return 1;
 }
-
-/* Image format properties.
- */
-
-#ifndef BYTE_ORDER
-  #include <endian.h>
-#endif
- 
-uint32_t gamek_image_pixel_from_rgba(uint8_t fmt,uint8_t r,uint8_t g,uint8_t b,uint8_t a) {
-  switch (fmt) {
-    #if BYTE_ORDER==BIG_ENDIAN
-      case GAMEK_IMGFMT_RGBX: return (r<<24)|(g<<16)|(b<<8)|a;
-    #else
-      case GAMEK_IMGFMT_RGBX: return r|(g<<8)|(b<<16)|(a<<24);
-    #endif
-    case GAMEK_IMGFMT_BGR332: return (b&0xe0)|((g>>3)&0x1c)|(r>>6);
-  }
-  return 0;
-}

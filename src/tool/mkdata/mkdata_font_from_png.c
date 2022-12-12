@@ -86,18 +86,26 @@ static int mkdata_glyph_height(uint32_t glyph) {
   return descent+h;
 }
 
-/* Read 96 glyphs off a y8 image, and calculate line height.
+/* Read up to 96 glyphs off a y8 image, and calculate line height.
  */
  
-static int mkdata_read_font_image(uint32_t *glyphv/*96*/,const struct png_image *image,int colw,int rowh,const char *path) {
-  if ((image->w<colw*16)||(image->h<rowh*6)) return -1;
+static int mkdata_read_font_image(
+  uint32_t *glyphv/*96*/,
+  const struct png_image *image,
+  int colw,int rowh,
+  int colc,int rowc,
+  int codepoint,
+  const char *path
+) {
+  if (colc*rowc>96) return -1;
+  if ((image->w<colw*colc)||(image->h<rowh*rowc)) return -1;
   if ((image->depth!=8)||(image->colortype!=0)) return -1;
-  int lineheight=0,codepoint=0x20;
+  int lineheight=0;
   int ribbonstride=image->stride*rowh;
   const uint8_t *row=image->pixels;
-  int yi=6; for (;yi-->0;row+=ribbonstride) {
+  int yi=rowc; for (;yi-->0;row+=ribbonstride) {
     const uint8_t *col=row;
-    int xi=16; for (;xi-->0;col+=colw,glyphv++,codepoint++) {
+    int xi=colc; for (;xi-->0;col+=colw,glyphv++,codepoint++) {
       int err=mkdata_read_glyph(glyphv,col,image->stride,colw,rowh,path,codepoint);
       if (err<0) {
         if (err!=-2) fprintf(stderr,"%s:%02x: Failed to read glyph.\n",path,codepoint);
@@ -108,6 +116,16 @@ static int mkdata_read_font_image(uint32_t *glyphv/*96*/,const struct png_image 
     }
   }
   return lineheight+1;
+}
+
+/* Based on the cell counts, selected the base codepoint.
+ * For now we are supporting 16x6=>0x20 and 10x1=>0x30.
+ */
+ 
+static int mkdata_font_choose_codepoint_from_dimensions(int colc,int rowc) {
+  if ((colc==16)&&(rowc==6)) return 0x20;
+  if ((colc==10)&&(rowc==1)) return 0x30;
+  return -1;
 }
 
 /* Font from PNG, main entry point.
@@ -123,10 +141,13 @@ int mkdata_font_from_png(void *dstpp,const void *src,int srcc,const char *path) 
     return -2;
   }
   const int colw=8,rowh=12;
-  if ((image->w!=colw*16)||(image->h!=rowh*6)) {
+  int colc=image->w/colw;
+  int rowc=image->h/rowh;
+  int codepoint0=mkdata_font_choose_codepoint_from_dimensions(colc,rowc);
+  if ((codepoint0<0)||(image->w%colw)||(image->h%rowh)) {
     fprintf(stderr,
-      "%s: Found %dx%d image, expected %dx%d (16x6 glyphs of %dx%d pixels)\n",
-      path,image->w,image->h,colw*16,rowh*6,colw,rowh
+      "%s: Found %dx%d image, expected %dx%d or %dx%d (16x6 or 10x1 glyphs of %dx%d pixels)\n",
+      path,image->w,image->h,colw*16,rowh*6,colw*10,rowh*1,colw,rowh
     );
     png_image_del(image);
     return -2;
@@ -148,7 +169,7 @@ int mkdata_font_from_png(void *dstpp,const void *src,int srcc,const char *path) 
   /* Convert image into glyphs and line height.
    */
   uint32_t glyphv[96];
-  int lineheight=mkdata_read_font_image(glyphv,image,colw,rowh,path);
+  int lineheight=mkdata_read_font_image(glyphv,image,colw,rowh,colc,rowc,codepoint0,path);
   if (lineheight<1) {
     if (lineheight!=-2) fprintf(stderr,"%s: Failed to read glyphs from image.\n",path);
     png_image_del(image);
@@ -157,21 +178,22 @@ int mkdata_font_from_png(void *dstpp,const void *src,int srcc,const char *path) 
   png_image_del(image);
   
   // And finally, encode the font:
+  int glyphc=colc*rowc;
   int dstc=
     1+ // lineheight
     2+ // table header
-    96*4+ // glyphs
+    glyphc*4+ // glyphs
     1; // terminator
   uint8_t *dst=malloc(dstc);
   if (!dst) return -1;
   
   dst[0]=lineheight;
-  dst[1]=96; // glyph count, table 0
-  dst[2]=0x20; // first code point, table 0
+  dst[1]=glyphc; // glyph count, table 0
+  dst[2]=codepoint0; // first code point, table 0
   {
     uint8_t *dstp=dst+3;
     const uint32_t *srcp=glyphv;
-    int i=96; for (;i-->0;dstp+=4,srcp++) {
+    int i=glyphc; for (;i-->0;dstp+=4,srcp++) {
       dstp[0]=(*srcp)>>24;
       dstp[1]=(*srcp)>>16;
       dstp[2]=(*srcp)>>8;

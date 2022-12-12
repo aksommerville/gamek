@@ -93,6 +93,8 @@ void mynth_voice_begin(struct mynth_voice *voice,struct mynth_channel *channel,u
     voice->dplo=voice->dp/adjust;
     adjust=(float)channel->warble_rate/(float)mynth.rate;
     voice->ddp=((int32_t)voice->dplo-(int32_t)voice->dphi)*adjust;
+    voice->dp=voice->dplo+((channel->warble_phase&0x7f)*(float)(voice->dphi-voice->dplo))/127.0f;
+    if ((channel->warble_phase&0x7f)<0x40) voice->ddp=-voice->ddp;
   } else {
     voice->dplo=0;
     voice->dphi=0;

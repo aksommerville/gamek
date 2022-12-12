@@ -161,6 +161,8 @@ static int linux_poll_or_sleep(int tous) {
 int linux_io_update() {
   int64_t now=linux_now_us();
   if (now>=gamek_linux.nexttime) { // Ready to update, don't delay.
+    // Actually... it's dangerous to skip polling. Do poll, with a zero timeout.
+    if (linux_poll_or_sleep(0)<0) return -1;
     gamek_linux.nexttime+=gamek_linux.frametime;
     if (gamek_linux.nexttime<=now) { // We've been stalled more than one frame. Resync clock.
       gamek_linux.clockfaultc++;

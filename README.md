@@ -26,3 +26,10 @@ So the framework aims for a very small memory footprint, and minimal CPU waste.
 - [ ] Network?
 - [ ] Helper to spawn a new project.
 - [ ] mynth: Generate and provide wave table.
+- [ ] Standard demos
+- - [x] invaders
+- - [ ] snake
+- - [ ] platformer
+- - [ ] adventure
+- - [ ] rhythm
+- [x] glx: initialize window to framebuffer aspect

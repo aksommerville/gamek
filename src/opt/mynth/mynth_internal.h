@@ -47,6 +47,7 @@ extern struct mynth {
     uint8_t sustain;
     uint8_t warble_range; // dimes
     uint8_t warble_rate; // hz
+    uint8_t warble_phase;
   } channelv[MYNTH_CHANNEL_LIMIT];
   
   struct mynth_voice {

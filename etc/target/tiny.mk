@@ -85,10 +85,10 @@ tiny_EXTFILES:= \
 
 # Now do our usual build stuff...
   
-tiny_DATA_SRC:=$(filter src/data/%,$(SRCFILES))
-tiny_DATA_C:=$(patsubst src/data/%,$(MIDDIR)/data/%.c,$(tiny_DATA_SRC))
+tiny_DATA_SRC:=$(filter src/data/% %.png %.mid,$(SRCFILES))
+tiny_DATA_C:=$(patsubst src/%,$(MIDDIR)/%.c,$(tiny_DATA_SRC))
 # Rules for more specific patterns could go here, eg if you need some other mkdata flag for images or whatever.
-$(MIDDIR)/data/%.c:src/data/% $(TOOL_mkdata_EXE);$(PRECMD) $(TOOL_mkdata_EXE) -o$@ -i$<
+$(MIDDIR)/%.c:src/% $(TOOL_mkdata_EXE);$(PRECMD) $(TOOL_mkdata_EXE) -o$@ -i$< --imgfmt=BGR332
 
 tiny_SRCFILES:= \
   $(filter-out src/opt/% src/test/% src/tool/% src/pf/%,$(SRCFILES)) \

@@ -65,11 +65,11 @@ static void akx11_size_window_for_framebuffer(
 ) {
   akx11->w=(monw*3)>>2;
   akx11->h=(monh*3)>>2;
-  int wforh=(monw*akx11->h)/monh;
+  int wforh=(fbw*akx11->h)/fbh;
   if (wforh<=akx11->w) {
     akx11->w=wforh;
   } else {
-    akx11->h=(monh*akx11->w)/monw;
+    akx11->h=(fbh*akx11->w)/fbw;
   }
 }
 

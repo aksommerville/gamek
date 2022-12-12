@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "common/gamek_image.h"
 #include "opt/fs/gamek_fs.h"
 #include "opt/argv/gamek_argv.h"
 
@@ -13,7 +14,7 @@ int mkdata_encode_c(
 );
 
 int mkdata_font_from_png(void *dst,const void *src,int srcc,const char *path);
-int mkdata_image_from_png(void *dst,const void *src,int srcc,const char *path);
+int mkdata_image_from_png(void *dst,const void *src,int srcc,const char *path,int imgfmt);
 int mkdata_song_from_midi(void *dst,const void *src,int srcc,const char *path);
 
 /* Data formats.
@@ -57,6 +58,23 @@ static int mkdata_format_eval(const char *src,int srcc) {
   return -1;
 }
 
+/* Other symbols.
+ */
+ 
+static int gamek_imgfmt_eval(const char *src,int srcc) {
+  if (!src) return -1;
+  if (srcc<0) { srcc=0; while (src[srcc]) srcc++; }
+  #define _(tag) if ((srcc==sizeof(#tag)-1)&&!memcmp(src,#tag,srcc)) return GAMEK_IMGFMT_##tag;
+  GAMEK_FOR_EACH_IMGFMT
+  #undef _
+  
+  // Aliases
+  if ((srcc==4)&&!memcmp(src,"RGBA",4)) return GAMEK_IMGFMT_RGBX;
+  if ((srcc==4)&&!memcmp(src,"TINY",4)) return GAMEK_IMGFMT_BGR332;
+  
+  return -1;
+}
+
 /* Globals.
  */
 
@@ -68,6 +86,7 @@ static int midfmt=MKDATA_FORMAT_UNSPEC; // Usually (font,image,song)
 static int dstfmt=MKDATA_FORMAT_UNSPEC; // Usually (c)
 static int unit_size=8; // -64,-32,-16,-8,8,16,32,64; size of primitive C type, if outputting C.
 static char *name=0; // name of C object, if outputting C.
+static int imgfmt=GAMEK_IMGFMT_RGBX;
 
 /* --help
  */
@@ -83,6 +102,7 @@ static void mkdata_print_help() {
     "  --dstfmt=FORMAT   Output file format, override assumption.\n"
     "  --unit-size=INT   C unit size (8,16,32,64, negative for signed), default 8.\n"
     "  --name=STRING     Name of C object, otherwise inferred from file name.\n"
+    "  --imgfmt=NAME     Gamek image format. RGBX BGR332\n"
     "\n"
     "FORMAT:\n"
     "  binary         Raw data, implies no conversion.\n"
@@ -154,6 +174,14 @@ static int cb_arg(const char *k,int kc,const char *v,int vc,int vn,void *userdat
       if (!(name=malloc(vc+1))) return -1;
       memcpy(name,v,vc);
       name[vc]=0;
+    }
+    return 0;
+  }
+  
+  if ((kc==6)&&!memcmp(k,"imgfmt",6)) {
+    if ((imgfmt=gamek_imgfmt_eval(v,vc))<0) {
+      fprintf(stderr,"%s: Unknown image format '%.*s'\n",exename,vc,v);
+      return -1;
     }
     return 0;
   }
@@ -324,7 +352,7 @@ static int mkdata_convert(void *dst,int dstfmt,const void *src,int srcc,int srcf
   
   // The rest, the useful ones, are all intermediates from inputs.
   if ((dstfmt==MKDATA_FORMAT_font)&&(srcfmt==MKDATA_FORMAT_png)) return mkdata_font_from_png(dst,src,srcc,srcpath);
-  if ((dstfmt==MKDATA_FORMAT_image)&&(srcfmt==MKDATA_FORMAT_png)) return mkdata_image_from_png(dst,src,srcc,srcpath);
+  if ((dstfmt==MKDATA_FORMAT_image)&&(srcfmt==MKDATA_FORMAT_png)) return mkdata_image_from_png(dst,src,srcc,srcpath,imgfmt);
   if ((dstfmt==MKDATA_FORMAT_song)&&(srcfmt==MKDATA_FORMAT_midi)) return mkdata_song_from_midi(dst,src,srcc,srcpath);
   
   fprintf(stderr,"%s: No known conversion to '%s' from '%s'\n",srcpath,mkdata_format_repr(dstfmt),mkdata_format_repr(srcfmt));

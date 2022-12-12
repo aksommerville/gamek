@@ -77,6 +77,8 @@ export class GamekController {
   generateOptions() {
     return {
       env: {
+        rand: () => Math.floor(Math.random() * 0x10000),
+      
         gamek_platform_terminate: () => this._gamek_platform_terminate(),
         gamek_platform_audio_event: (chid, opcode, a, b) => this.audio.event(chid, opcode, a, b),
         gamek_platform_play_song: (v, c) => this._gamek_platform_play_song(v, c),

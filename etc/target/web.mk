@@ -12,17 +12,17 @@ web_CCOPT:=-c -MMD -O3 -nostdlib
 web_CCDEF:= \
   $(patsubst %,-DGAMEK_USE_%=1,$(web_OPT_ENABLE))
 web_CCINC:=-Isrc -I$(MIDDIR)
-web_CCWARN:=-Werror -Wimplicit
+web_CCWARN:=-Werror -Wimplicit -Wno-parentheses
 web_CC:=$(web_WASI_SDK)/bin/clang $(web_CCOPT) $(web_CCDEF) $(web_CCINC) $(web_CCWARN)
 web_LD:=$(web_WASI_SDK)/bin/clang $(web_LDOPT)
 web_LDPOST:=
 
 # Digest data files.
 # All data files get turned into C code and compiled like sources.
-web_DATA_SRC:=$(filter src/data/%,$(SRCFILES))
-web_DATA_C:=$(patsubst src/data/%,$(MIDDIR)/data/%.c,$(web_DATA_SRC))
+web_DATA_SRC:=$(filter src/data/% %.png %.mid,$(SRCFILES))
+web_DATA_C:=$(patsubst src/%,$(MIDDIR)/%.c,$(web_DATA_SRC))
 # Rules for more specific patterns could go here, eg if you need some other mkdata flag for images or whatever.
-$(MIDDIR)/data/%.c:src/data/% $(TOOL_mkdata_EXE);$(PRECMD) $(TOOL_mkdata_EXE) -o$@ -i$<
+$(MIDDIR)/%.c:src/% $(TOOL_mkdata_EXE);$(PRECMD) $(TOOL_mkdata_EXE) -o$@ -i$<
 
 # A "target" isn't necessarily a "platform", but usually it is.
 # Most targets should begin with this:

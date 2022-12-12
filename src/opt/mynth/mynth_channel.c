@@ -44,6 +44,7 @@ void mynth_channel_control(struct mynth_channel *channel,uint8_t k,uint8_t v) {
     case 0x47: channel->wheel_range=v; break;
     case 0x48: channel->warble_range=v; break;
     case 0x49: channel->warble_rate=v; break;
+    case 0x4a: channel->warble_phase=v; break;
     
     case 0x78: mynth_stop_voices_for_channel(channel-mynth.channelv); return;
     case 0x79: mynth_channel_reset(channel); return;

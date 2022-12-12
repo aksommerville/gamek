@@ -35,10 +35,10 @@ endif
 
 # Digest data files.
 # All data files get turned into C code and compiled like sources.
-linux_DATA_SRC:=$(filter src/data/%,$(SRCFILES))
-linux_DATA_C:=$(patsubst src/data/%,$(MIDDIR)/data/%.c,$(linux_DATA_SRC))
+linux_DATA_SRC:=$(filter src/data/% %.png %.mid,$(SRCFILES))
+linux_DATA_C:=$(patsubst src/%,$(MIDDIR)/%.c,$(linux_DATA_SRC))
 # Rules for more specific patterns could go here, eg if you need some other mkdata flag for images or whatever.
-$(MIDDIR)/data/%.c:src/data/% $(TOOL_mkdata_EXE);$(PRECMD) $(TOOL_mkdata_EXE) -o$@ -i$<
+$(MIDDIR)/%.c:src/% $(TOOL_mkdata_EXE);$(PRECMD) $(TOOL_mkdata_EXE) -o$@ -i$<
 
 # A "target" isn't necessarily a "platform", but usually it is.
 # Most targets should begin with this:
