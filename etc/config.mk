@@ -4,9 +4,14 @@
 # Which targets are we building? See etc/target for options.
 GAMEK_TARGETS:=generic linux tiny web
 
+# Extra optional units for the tools.
+# Most tools are generic, but fiddle requires MIDI, PCM, and synth APIs.
+TOOL_OPT_EXTRA:=alsamidi alsapcm mynth
+
 run:linux-run-invaders
 serve:web-serve
 serve-dev:web-serve-dev
+fiddle:tool-run-fiddle
 
 # --- linux ---
 # At least one of (GLX,DRM) must be enabled. Empty to disable.

@@ -33,3 +33,4 @@ So the framework aims for a very small memory footprint, and minimal CPU waste.
 - - [ ] adventure
 - - [ ] rhythm
 - [x] glx: initialize window to framebuffer aspect
+- [ ] fiddle: Load synth config and monitor with inotify.

@@ -5,7 +5,7 @@ MIDDIR:=mid/tool
 OUTDIR:=out/tool
 
 # All tools get the same optional units. No big deal to include something one tool doesn't need.
-TOOL_OPT_ENABLE:=argv fs serial png
+TOOL_OPT_ENABLE:=argv fs serial png $(TOOL_OPT_EXTRA)
 
 # Compiler, etc. This part sometimes needs tweaking.
 TOOL_CCOPT:=-c -MMD -O3
@@ -31,5 +31,6 @@ define TOOL_RULES # $1=name
   all:$$(TOOL_$1_EXE)
   TOOL_$1_OFILES:=$(TOOL_OFILES_COMMON) $(filter $(MIDDIR)/tool/$1/%,$(TOOL_OFILES_ALL))
   $$(TOOL_$1_EXE):$$(TOOL_$1_OFILES);$$(PRECMD) $(TOOL_LD) -o$$@ $$^ $(TOOL_LDPOST)
+  tool-run-$1:$$(TOOL_$1_EXE);$$(TOOL_$1_EXE)
 endef
 $(foreach T,$(TOOLS),$(eval $(call TOOL_RULES,$T)))

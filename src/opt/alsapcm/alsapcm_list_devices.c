@@ -103,6 +103,15 @@ int alsapcm_list_devices(
       closedir(dir);
       return -1;
     }
+    
+    /* I didn't want to do this, but seem to be forced.
+     * We only want PCM devices eg "pcmC0D0".
+     * Usually it's fine to open the other ones, we'll see that they aren't PCM and close them right away.
+     * And that would allow us to be safe against oddball systems that name them some other way.
+     * But I'm finding when my Orba is connected as "midiC1D0", it stalls at open. Grr.
+     */
+    if ((basec<3)||memcmp(base,"pcm",3)) continue;
+    
     memcpy(subpath+pathc,base,basec+1);
     if (alsapcm_list_devices_1(&device,subpath,&info)<0) continue;
     device.basename=base;
