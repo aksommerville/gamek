@@ -31,6 +31,6 @@ define TOOL_RULES # $1=name
   all:$$(TOOL_$1_EXE)
   TOOL_$1_OFILES:=$(TOOL_OFILES_COMMON) $(filter $(MIDDIR)/tool/$1/%,$(TOOL_OFILES_ALL))
   $$(TOOL_$1_EXE):$$(TOOL_$1_OFILES);$$(PRECMD) $(TOOL_LD) -o$$@ $$^ $(TOOL_LDPOST)
-  tool-run-$1:$$(TOOL_$1_EXE);$$(TOOL_$1_EXE)
+  tool-run-$1:$$(TOOL_$1_EXE);$$(TOOL_$1_EXE) $$(TOOL_$1_ARGS)
 endef
 $(foreach T,$(TOOLS),$(eval $(call TOOL_RULES,$T)))

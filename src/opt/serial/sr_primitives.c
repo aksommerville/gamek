@@ -206,7 +206,7 @@ int sr_double_eval(double *dst,const char *src,int srcc) {
   if (src[srcp]=='-') {
     positive=0;
     if (++srcp>=srcc) return -1;
-  } else {
+  } else if (src[srcp]=='+') {
     if (++srcp>=srcc) return -1;
   }
 

@@ -8,6 +8,7 @@ void mynth_channel_reset(struct mynth_channel *channel) {
   channel->wheel=0x2000;
   channel->bend=1.0f;
   channel->wheel_range=20;
+  channel->waveid=0;
   channel->wave=mynth.wavev[0];
   channel->sustain=1;
   channel->warble_range=0;
@@ -40,7 +41,7 @@ void mynth_channel_control(struct mynth_channel *channel,uint8_t k,uint8_t v) {
     case 0x30: channel->rlschi=(v*8*mynth.rate)/1000+1; break;
     
     case 0x40: channel->sustain=(v>=0x40)?1:0; break;
-    case 0x46: channel->wave=mynth.wavev[v&7]; break;
+    case 0x46: channel->waveid=v&7; channel->wave=mynth.wavev[channel->waveid]; break;
     case 0x47: channel->wheel_range=v; break;
     case 0x48: channel->warble_range=v; break;
     case 0x49: channel->warble_rate=v; break;

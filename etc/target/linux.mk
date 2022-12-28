@@ -35,7 +35,7 @@ endif
 
 # Digest data files.
 # All data files get turned into C code and compiled like sources.
-linux_DATA_SRC:=$(filter src/data/% %.png %.mid,$(SRCFILES))
+linux_DATA_SRC:=$(filter src/data/% %.png %.mid %.wave,$(SRCFILES))
 linux_DATA_C:=$(patsubst src/%,$(MIDDIR)/%.c,$(linux_DATA_SRC))
 # Rules for more specific patterns could go here, eg if you need some other mkdata flag for images or whatever.
 $(MIDDIR)/%.c:src/% $(TOOL_mkdata_EXE);$(PRECMD) $(TOOL_mkdata_EXE) -o$@ -i$<

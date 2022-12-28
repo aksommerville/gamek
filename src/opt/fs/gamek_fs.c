@@ -85,3 +85,16 @@ int gamek_mkdirp(const char *path) {
   if (mkdir(path,0775)<0) return -1;
   return 0;
 }
+
+/* Last separator.
+ */
+ 
+int gamek_path_find_separator(const char *path,int pathc) {
+  if (!path) return -1;
+  if (pathc<0) { pathc=0; while (path[pathc]) pathc++; }
+  int p=pathc;
+  // Ignore trailing separators.
+  while (p&&((path[p-1]=='/')||(path[p-1]=='\\'))) p--;
+  while (p&&(path[p-1]!='/')&&(path[p-1]!='\\')) p--;
+  return p-1;
+}

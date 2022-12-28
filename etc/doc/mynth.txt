@@ -49,3 +49,47 @@ After the header are events, identifiable by the high bits of the first byte:
   1100cccc kkkkkkkk vvvvvvvv Control Change. (k,v) normally in 0..127, but we do allow the full 8 bits.
   1101dddd vvvvvvvv          Pitch wheel. unsigned: 0x80 is default.
   111xxxxx ...               Reserved, illegal.
+  
+=== Wave format ===
+
+Mynth at runtime expects waves provided as 512 signed 16-bit samples, one period of a wave.
+
+Our "mkdata" tool can produce these waves from a sensible text format, conventionally named "*.wave".
+One file produces one wave.
+Each line is either empty, a line comment beginning '#', or a single operation to perform on the wave.
+Comments are full lines only.
+You start with a perfect sine wave.
+
+shape NAME
+  Overwrite with a pure shape: sine sawup sawdown square triangle noise silence
+  "saw"="sawdown"
+  
+norm [LEVEL]
+  Normalize peak to LEVEL (float 0..1). 1 if unspecified.
+  
+normrms [LEVEL]
+  Normalize such that output RMS matches LEVEL before clipping.
+  sqrt(2)/2 if unspecified (that's the RMS level of a pure sine wave).
+  
+clip [LEVEL]
+  Force all samples to within -LEVEL..LEVEL, creating a plateau and discontinuity.
+  We implicitly "clip 1" at the end regardless.
+  
+gate LEVEL
+  Drop all samples within -LEVEL..LEVEL to zero.
+  This is not usually something you'd want.
+  
+gain GAIN
+  Multiply signal by GAIN (float).
+  
+average SAMPLECOUNT
+  Looped moving average with a window of the given length. (1 is no-op).
+  This is a crude low-pass filter.
+  
+phase PHASE
+  Rotate signal in time by PHASE cycles, 0..1.
+  
+harmonics COEFFICIENTS...
+  Combine the current wave with itself at multiple harmonics.
+  COEFFICIENTS are floats, usually in 0..1.
+  A single coefficient of 1 is no-op.

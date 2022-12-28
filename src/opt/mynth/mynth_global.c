@@ -76,6 +76,15 @@ void mynth_set_wave(uint8_t waveid,const int16_t *v) {
   if (waveid>=MYNTH_WAVE_COUNT) return;
   if (!v) mynth.wavev[waveid]=mynth_wave_default;
   else mynth.wavev[waveid]=v;
+  
+  // Update any channel using the old wave.
+  // Don't try to do this for voices; let them play out on the old wave.
+  //TODO Consider: Is there a risk that old waves playing out on existing voices might be freed before they finish?
+  struct mynth_channel *channel=mynth.channelv;
+  uint8_t i=MYNTH_CHANNEL_LIMIT;
+  for (;i-->0;channel++) {
+    if (channel->waveid==waveid) channel->wave=mynth.wavev[waveid];
+  }
 }
 
 /* Recalculate rate table.
@@ -280,6 +289,7 @@ void mynth_event(uint8_t chid,uint8_t opcode,uint8_t a,uint8_t b) {
 void mynth_play_song(const void *v,uint16_t c) {
 
   mynth_release_all();
+  mynth_reset_all();
 
   if (!v||(c<4)) { // null or too small to be a song: no song
     mynth.song=0;

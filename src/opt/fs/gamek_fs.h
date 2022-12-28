@@ -12,4 +12,7 @@ int gamek_file_write(const char *path,const void *src,int srcc);
 
 int gamek_mkdirp(const char *path);
 
+// Position of last separator.
+int gamek_path_find_separator(const char *path,int pathc);
+
 #endif

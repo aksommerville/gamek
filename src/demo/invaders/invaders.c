@@ -57,6 +57,9 @@ extern const uint8_t font_g06[];
 extern const uint8_t font_digits_3x5[];
 extern const uint8_t aliensprites[];
 extern const uint8_t defend_the_galaxy[];
+extern const int16_t bass[];
+extern const int16_t lead[];
+
 static struct gamek_image img_aliensprites;
 static uint8_t animclock=0; // everything that animates uses 4 frames and a shared clock
 static uint8_t animframe=0;
@@ -169,6 +172,8 @@ static void sound_effect_combo_lost() {
 }
 
 static void sound_effects_setup() {
+  gamek_platform_set_audio_wave(0,lead,512);
+  gamek_platform_set_audio_wave(1,bass,512);
 }
 
 /* High score.

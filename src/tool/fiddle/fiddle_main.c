@@ -1,4 +1,6 @@
 #include "fiddle_internal.h"
+#include "opt/argv/gamek_argv.h"
+#include "opt/serial/serial.h"
 #include <signal.h>
 
 struct fiddle fiddle={0};
@@ -7,9 +9,10 @@ struct fiddle fiddle={0};
  * We tolerate redundant lock and unlock.
  */
  
-static int fiddle_lock() {
+int fiddle_lock() {
   if (fiddle.lockc) return 0;
   #if GAMEK_USE_alsapcm
+    if (!fiddle.alsapcm) return 0;
     if (alsapcm_lock(fiddle.alsapcm)<0) return -1;
     fiddle.lockc=1;
     return 0;
@@ -17,7 +20,7 @@ static int fiddle_lock() {
   return 0;
 }
 
-static void fiddle_unlock() {
+void fiddle_unlock() {
   if (!fiddle.lockc) return;
   fiddle.lockc=0;
   #if GAMEK_USE_alsapcm
@@ -64,6 +67,21 @@ static void fiddle_pcm_out(int16_t *v,int c,void *userdata) {
     }
   #else
     memset(v,0,c<<1);
+  #endif
+  while (c&&fiddle.ragec) {
+    (*v)+=(rand()&0x3fff)-0x2000;
+    c--;
+    v++;
+    fiddle.ragec--;
+  }
+}
+
+/* Rage.
+ */
+ 
+void fiddle_unleash_rage() {
+  #if GAMEK_USE_alsapcm
+    fiddle.ragec=(alsapcm_get_rate(fiddle.alsapcm)*alsapcm_get_chanc(fiddle.alsapcm))/2;
   #endif
 }
 
@@ -141,13 +159,12 @@ static void fiddle_quit() {
   #endif
 }
 
-/* Init.
+/* Init drivers.
  */
  
-static int fiddle_init() {
-
-  signal(SIGINT,fiddle_rcvsig);
+static int fiddle_init_drivers() {
   
+  // MIDI-In.
   #if GAMEK_USE_alsamidi
     struct alsamidi_delegate alsamidi_delegate={
       .cb=fiddle_midi_in,
@@ -160,6 +177,7 @@ static int fiddle_init() {
     fprintf(stderr,"fiddle:WARNING: No MIDI-In driver. Please enable one: alsamidi\n");
   #endif
   
+  // PCM-Out.
   #if GAMEK_USE_alsapcm
     struct alsapcm_delegate alsapcm_delegate={
       .pcm_out=fiddle_pcm_out,
@@ -178,6 +196,7 @@ static int fiddle_init() {
     fprintf(stderr,"fiddle:WARNING: No PCM-Out driver. Please enable one: alsapcm\n");
   #endif
   
+  // Synth.
   #if GAMEK_USE_mynth
     mynth_init(fiddle.rate);
   #else
@@ -192,18 +211,77 @@ static int fiddle_init() {
   return 0;
 }
 
+/* Receive argument.
+ */
+ 
+static void fiddle_print_help(const char *topic,int topicc) {
+  fprintf(stderr,
+    "\n"
+    "Usage: fiddle [OPTIONS]\n"
+    "\n"
+    "OPTIONS:\n"
+    "  --wave-N=PATH       Compile and load a wave file, and monitor it for changes.\n"
+    "\n"
+  );
+}
+ 
+static int fiddle_cb_arg(const char *k,int kc,const char *v,int vc,int vn,void *userdata) {
+
+  if ((kc==4)&&!memcmp(k,"help",4)) {
+    fiddle_print_help(v,vc);
+    return 1;
+  }
+  
+  if ((kc>5)&&!memcmp(k,"wave-",5)) {
+    int waveid=-1;
+    if ((sr_int_eval(&waveid,k+5,kc-5)<2)||(waveid<0)||(waveid>7)) {
+      fprintf(stderr,"fiddle:ERROR: Invalid wave ID: '%.*s'\n",kc,k);
+      return -2;
+    }
+    int err=fiddle_set_wave(waveid,v,vc);
+    if (err<0) return err;
+    return 0;
+  }
+
+  fprintf(stderr,"fiddle:ERROR: Unexpected argument '%.*s'='%.*s'\n",kc,k,vc,v);
+  return -2;
+}
+
+/* Init. Returns 0 to proceed, -2 if an error was logged, <0 to fail, >0 to terminate successfully.
+ */
+ 
+static int fiddle_init(int argc,char **argv) {
+
+  signal(SIGINT,fiddle_rcvsig);
+  
+  int err=fiddle_waves_init();
+  if (err<0) return err;
+  
+  if (err=gamek_argv_read(argc,argv,fiddle_cb_arg,0)) return err;
+  
+  if ((err=fiddle_init_drivers())<0) return err;
+  
+  return 0;
+}
+
 /* Update.
  */
  
 static int fiddle_update() {
 
+  int err=fiddle_waves_update();
+  if (err<0) {
+    if (err!=-2) fprintf(stderr,"Unspecified error updating waves.\n");
+    return -2;
+  }
+
   #if GAMEK_USE_alsamidi
-    if (alsamidi_update(fiddle.alsamidi,1000)<0) {
+    if (alsamidi_update(fiddle.alsamidi,100)<0) {
       fprintf(stderr,"alsamidi_update failed\n");
       return -2;
     }
   #else
-    usleep(1000000);
+    usleep(100000);
   #endif
   
   #if GAMEK_USE_alsapcm
@@ -221,9 +299,9 @@ static int fiddle_update() {
  
 int main(int argc,char **argv) {
   int err;
-  if ((err=fiddle_init())<0) {
-    if (err!=-2) fprintf(stderr,"fiddle_init failed\n");
-    return 1;
+  if (err=fiddle_init(argc,argv)) {
+    if ((err<0)&&(err!=-2)) fprintf(stderr,"fiddle_init failed\n");
+    return (err<0)?1:0;
   }
   fprintf(stderr,"Fiddle running. Connect via MIDI bus. SIGINT to quit.\n");
   while (!fiddle.terminate) {

@@ -11,7 +11,12 @@ TOOL_OPT_EXTRA:=mynth
 run:macos-run-invaders
 serve:web-serve
 serve-dev:web-serve-dev
+
+# To run fiddle with real waves, we have to specify each file at the command line.
+# This is not ideal, but I don't have a better plan. Wave ID to file name gets associated programmatically by the game.
+# Luckily, all other config (for Mynth at least) comes via MIDI events, so we don't need special handling for most things.
 fiddle:tool-run-fiddle
+TOOL_fiddle_ARGS:=--wave-0=src/demo/invaders/lead.wave --wave-1=src/demo/invaders/bass.wave
 
 # --- linux ---
 # At least one of (GLX,DRM) must be enabled. Empty to disable.

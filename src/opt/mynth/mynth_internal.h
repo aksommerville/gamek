@@ -41,6 +41,7 @@ extern struct mynth {
     uint16_t wheel; // 0..0x3fff, default 0x2000
     float bend; // rate multiplier, derived from (wheel). Definitely 1 in the default case 0x2000.
     uint8_t wheel_range; // dimes, default 20 (ie one full step)
+    uint8_t waveid;
     const int16_t *wave;
     int32_t atkclo,atkvlo,decclo,susvlo,rlsclo; // envelope at minimum velocity
     int32_t atkchi,atkvhi,decchi,susvhi,rlschi; // ...maximum
