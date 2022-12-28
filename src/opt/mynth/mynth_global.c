@@ -196,7 +196,8 @@ void mynth_note_once(uint8_t chid,uint8_t noteid,uint8_t velocity,uint32_t ttl) 
   struct mynth_channel *channel=mynth.channelv+chid;
   struct mynth_voice *voice=mynth_note_on(channel,noteid,velocity);
   if (!voice) return;
-  voice->ttl=ttl;
+  if (ttl) voice->ttl=ttl;
+  else voice->ttl=1;
 }
 
 /* Note Off.

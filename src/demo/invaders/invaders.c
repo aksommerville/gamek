@@ -57,6 +57,7 @@ extern const uint8_t font_g06[];
 extern const uint8_t font_digits_3x5[];
 extern const uint8_t aliensprites[];
 extern const uint8_t defend_the_galaxy[];
+extern const uint8_t supernova[];
 extern const int16_t bass[];
 extern const int16_t lead[];
 
@@ -496,6 +497,7 @@ static void begin_new_state() {
 
   // If the hero is dead, it's "game over" and show the high scores.
   if (!alive) {
+    gamek_platform_play_song(defend_the_galaxy,0xffff);
     game_state=GAME_STATE_GAME_OVER;
     memcpy(message,"GAME OVER",9);
     messagec=9;
@@ -548,6 +550,7 @@ static void begin_new_state() {
 }
 
 static void reset_game() {
+  gamek_platform_play_song(supernova,0xffff);
   sound_effect_start_game();
   alive=1;
   current_wave=0;

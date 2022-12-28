@@ -1,5 +1,4 @@
-shape saw
-harmonics 0.900 0.050 0.300
-clip 0.5
+harmonics 0.900 0.050 0.300 0.000 0.100
+clip 0.3
 average 10
 normrms 0.5

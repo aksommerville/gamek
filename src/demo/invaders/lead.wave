@@ -1,4 +1,4 @@
-harmonics 0.500 0.300 0.200 0.000 0.100 0.000 0.050 0.010
+harmonics 0.500 0.300 0.200 0.000 0.100
 clip 0.2
-average 20
+average 25
 normrms 0.7

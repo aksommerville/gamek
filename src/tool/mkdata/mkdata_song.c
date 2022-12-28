@@ -407,6 +407,8 @@ static int mkdata_song_finish_inner(
   if (sr_encode_u8(dst,4)<0) return -1; // startp, ie length of this header.
   if (sr_encode_raw(dst,"\0\x04",2)<0) return -1; // loopp, will fill in later. Or 4 if we somehow fail to.
   
+  fprintf(stderr,"reencoding song...\n");
+  
   // Events.
   int pvtime=0;
   const struct mkdata_event *event=song->eventv;
@@ -545,6 +547,7 @@ struct mkdata_event *mkdata_song_add_event(struct mkdata_song *song,int p,int ti
     } else {
       p=mkdata_song_eventv_search_time(song,time);
       if (p<0) p=-p-1;
+      while ((p<song->eventc)&&(time==song->eventv[p].time)) p++;
     }
   } else if (time<0) {
     if (p>0) time=song->eventv[p-1].time;
