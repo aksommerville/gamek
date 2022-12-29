@@ -8,7 +8,7 @@ web_OPT_ENABLE:=
 
 # Compiler, etc. This part sometimes needs tweaking.
 web_LDOPT:=-nostdlib -Xlinker --no-entry -Xlinker --import-undefined -Xlinker --export-all
-web_CCOPT:=-c -MMD -O3 -nostdlib
+web_CCOPT:=-c -MMD -O3 -nostdlib $(web_WASI_COPT)
 web_CCDEF:= \
   $(patsubst %,-DGAMEK_USE_%=1,$(web_OPT_ENABLE))
 web_CCINC:=-Isrc -I$(MIDDIR)

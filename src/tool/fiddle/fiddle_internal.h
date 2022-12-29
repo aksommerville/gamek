@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <limits.h>
+#include <unistd.h>
 
 // MIDI-In API.
 #if GAMEK_USE_alsamidi

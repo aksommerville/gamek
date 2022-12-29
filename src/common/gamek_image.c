@@ -2,7 +2,16 @@
 #include "pf/gamek_pf.h" /* we don't use this; but tiny needs it, to acquire BYTE_ORDER */
 
 #ifndef BYTE_ORDER
-  #include <endian.h>
+  #if GAMEK_USE_macos
+    #include <machine/endian.h>
+  #elif GAMEK_USE_evdev
+    #include <endian.h>
+  #else
+    // Assume little-endian
+    #define BIG_ENDIAN 4321
+    #define LITTLE_ENDIAN 1234
+    #define BYTE_ORDER LITTLE_ENDIAN
+  #endif
 #endif
 
 /* Image format properties.
