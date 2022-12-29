@@ -16,16 +16,11 @@ macos_OBJC:=gcc -xobjective-c $(macos_CCOPT) $(macos_CCDEF) $(macos_CCINC) $(mac
 macos_LD:=gcc
 macos_LDPOST:=-lm -framework Cocoa -framework Quartz -framework OpenGL -framework MetalKit -framework Metal -framework CoreGraphics -framework IOKit -framework AudioUnit
 
-# Digest data files.
-# All data files get turned into C code and compiled like sources.
 macos_DATA_SRC:=$(filter src/data/% %.png %.mid,$(SRCFILES))
 macos_DATA_SRC:=$(filter-out src/pf/macos/template/%,$(macos_DATA_SRC))
 macos_DATA_C:=$(patsubst src/%,$(MIDDIR)/%.c,$(macos_DATA_SRC))
-# Rules for more specific patterns could go here, eg if you need some other mkdata flag for images or whatever.
 $(MIDDIR)/%.c:src/% $(TOOL_mkdata_EXE);$(PRECMD) $(TOOL_mkdata_EXE) -o$@ -i$<
 
-# A "target" isn't necessarily a "platform", but usually it is.
-# Most targets should begin with this:
 macos_SRCFILES:= \
   $(filter-out src/pf/% src/opt/% src/tool/% src/data/%,$(SRCFILES)) \
   $(filter src/pf/macos/%,$(SRCFILES)) \
@@ -45,8 +40,6 @@ macos_ICONS_DIR:=src/pf/macos/template/appicon.iconset
 macos_ICONS:=$(wildcard $(macos_ICONS_DIR)/*)
 
 #TODO APP_NAME should be the pretty form, not necessarily the executable's name as we're doing.
-macos_BUNDLE_PREFIX:=com.aksommerville
-macos_COPYRIGHT:=2023 AK Sommerville
 macos_PLIST_COMMAND=sed 's/EXE_NAME/$1/g;s/BUNDLE_IDENTIFIER/$(macos_BUNDLE_PREFIX).$1/g;s/APP_NAME/$1/g;s/APP_VERSION/1.0/g;s/COPYRIGHT/$(macos_COPYRIGHT)/g;' $$< > $$@
 macos_XIB_COMMAND=sed 's/APP_NAME/$1/g' $$< > $$@
 

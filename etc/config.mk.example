@@ -2,13 +2,14 @@
 # Local configuration for gamek.
 
 # Which targets are we building? See etc/target for options.
-GAMEK_TARGETS:=macos
+GAMEK_TARGETS:=generic web tiny linux
 
 # Extra optional units for the tools.
 # Most tools are generic, but fiddle requires MIDI, PCM, and synth APIs.
-TOOL_OPT_EXTRA:=mynth
+TOOL_OPT_EXTRA:=mynth alsapcm alsamidi
 
-run:linux-run-snake
+# Handy commands. Tweak to use your preferred target.
+run:linux-run-invaders
 serve:web-serve
 serve-dev:web-serve-dev
 
@@ -24,9 +25,13 @@ TOOL_fiddle_ARGS:=--wave-0=src/demo/invaders/lead.wave --wave-1=src/demo/invader
 linux_USE_GLX:=1
 linux_USE_DRM:=1
 
+# --- macos ---
+macos_BUNDLE_PREFIX:=com.aksommerville
+macos_COPYRIGHT:=2023 AK Sommerville
+
 # --- web ---
-#web_WASI_SDK:=/home/andy/proj/thirdparty/wasi-sdk-16.0
-web_WASI_SDK:=/Users/andy/proj/thirdparty/wasi-sdk-15.0
+# https://github.com/WebAssembly/wasi-sdk
+web_WASI_SDK:=/home/andy/proj/thirdparty/wasi-sdk-16.0
 web_WASI_COPT:=-fno-stack-check
 web_SERVER_COMMAND:=http-server -a localhost -p 8080 -c-1
 web_DEV_HOST:=
