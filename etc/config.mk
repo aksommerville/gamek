@@ -8,7 +8,7 @@ GAMEK_TARGETS:=macos
 # Most tools are generic, but fiddle requires MIDI, PCM, and synth APIs.
 TOOL_OPT_EXTRA:=mynth
 
-run:macos-run-invaders
+run:linux-run-snake
 serve:web-serve
 serve-dev:web-serve-dev
 

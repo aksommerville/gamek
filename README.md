@@ -35,7 +35,7 @@ So the framework aims for a very small memory footprint, and minimal CPU waste.
 - - [ ] thumby
 - [ ] Network?
 - [ ] Helper to spawn a new project.
-- [ ] mynth: Generate and provide wave table.
+- [x] mynth: Generate and provide wave table.
 - [ ] Standard demos
 - - [x] invaders
 - - [ ] snake
@@ -43,9 +43,9 @@ So the framework aims for a very small memory footprint, and minimal CPU waste.
 - - [ ] adventure
 - - [ ] rhythm
 - [x] glx: initialize window to framebuffer aspect
-- [ ] fiddle: Load synth config and monitor with inotify.
 - [ ] config.mk should be gitignored, with an example template
 - [ ] Build Wasm from Macos. Getting this error on my MacBook (10.13.6). Tried Wasi 17,16,15,12
 dyld: lazy symbol binding failed: Symbol not found: ____chkstk_darwin
   Referenced from: /Users/andy/proj/thirdparty/wasi-sdk-15.0/bin/clang (which was built for Mac OS X 11.6)
   Expected in: /usr/lib/libSystem.B.dylib
+- [x] fiddle: Load synth config and monitor with inotify.
