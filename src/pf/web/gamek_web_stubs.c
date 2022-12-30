@@ -269,6 +269,19 @@ void *memset(void *dst,int src,unsigned long c) {
   return dst;
 }
 
+void *memmove(void *dst,const void *src,unsigned long c) {
+  uint8_t *DST=dst;
+  const uint8_t *SRC=src;
+  if (DST<SRC) {
+    for (;c-->0;DST++,SRC++) *DST=*SRC;
+  } else {
+    DST+=c;
+    SRC+=c;
+    for (;c-->0;) *(--DST)=*(--SRC);
+  }
+  return 0;
+}
+
 void free(void *v) {
 }
 
