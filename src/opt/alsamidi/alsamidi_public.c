@@ -98,7 +98,10 @@ static void alsamidi_receive_event(
     case SNDRV_SEQ_EVENT_CONTROLLER: EV(0xb0|D.control.channel,D.control.param,D.control.value) break;
     case SNDRV_SEQ_EVENT_PGMCHANGE: EV(0xc0|D.control.channel,D.control.value) break;//TODO "value" or "param"?
     case SNDRV_SEQ_EVENT_CHANPRESS: EV(0xd0|D.control.channel,D.control.value) break;// ''
-    case SNDRV_SEQ_EVENT_PITCHBEND: EV(0xe0|D.control.channel,D.control.value&0x7f,(D.control.value>>7)&0x7f) break;//TODO '', range
+    case SNDRV_SEQ_EVENT_PITCHBEND: {
+        uint16_t v=D.control.value+0x2000;
+        EV(0xe0|D.control.channel,v&0x7f,(v>>7)&0x7f)
+      } break;
     // Deliberately not implementing Sysex.
     // Not bothering with most of the realtime events, because I don't feel they're important.
     case SNDRV_SEQ_EVENT_RESET: EV(0xff) break;

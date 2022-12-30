@@ -25,7 +25,7 @@ Documentation is all in this repo too; see [/etc/doc](https://github.com/aksomme
 - [ ] Network?
 - [ ] Helper to spawn a new project.
 - [ ] Standard demos
-- - [ ] snake: multiplayer
+- - [x] snake
 - - [ ] platformer: multiplayer, high resolution
 - - [ ] adventure: save progress
 - - [ ] rhythm: midi input (but also joysticks)
@@ -33,3 +33,4 @@ Documentation is all in this repo too; see [/etc/doc](https://github.com/aksomme
 dyld: lazy symbol binding failed: Symbol not found: ____chkstk_darwin
   Referenced from: /Users/andy/proj/thirdparty/wasi-sdk-15.0/bin/clang (which was built for Mac OS X 11.6)
   Expected in: /usr/lib/libSystem.B.dylib
+- [ ] Might need to simplify Mynth more aggressively. "snakeshakin" seems to push Tiny's limits.

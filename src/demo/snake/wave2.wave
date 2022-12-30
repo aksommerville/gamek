@@ -1,2 +1,4 @@
-shape square
+harmonics 0.999 0.100 0.333 0.040 0.111
+clip 0.5
+average 4
 normrms
