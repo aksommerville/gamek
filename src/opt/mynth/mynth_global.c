@@ -109,7 +109,7 @@ void mynth_init(int32_t rate) {
       mynth_recalculate_rate_table(rate);
     }
   }
-  mynth_reset_all();
+  mynth_reset_completely();
 }
 
 /* Update.
@@ -148,10 +148,33 @@ void mynth_update(int16_t *v,uint16_t c) {
 /* Full reset.
  */
  
+void mynth_reset_completely() {
+  struct mynth_channel *channel=mynth.channelv;
+  uint8_t i=MYNTH_CHANNEL_LIMIT;
+  for (;i-->0;channel++) {
+    mynth_channel_reset(channel);
+  }
+  mynth.voicec=0;
+}
+ 
 void mynth_reset_all() {
   struct mynth_channel *channel=mynth.channelv;
   uint8_t i=MYNTH_CHANNEL_LIMIT;
-  for (;i-->0;channel++) mynth_channel_reset(channel);
+  for (;i-->0;channel++) {
+  
+    /* I want to do this, reset to the default state.
+     * But that tends to screw up live playthrough; the sequencer should be expected to send 0xff liberally.
+     *
+    mynth_channel_reset(channel);
+    /**/
+    
+    /* Instead, only reset things that might go out of whack in real time.
+     */
+    channel->wheel=0x2000;
+    channel->bend=1.0f;
+    /**/
+  }
+  // Voices, of course, yes we do drop those cold.
   mynth.voicec=0;
 }
 
@@ -290,7 +313,7 @@ void mynth_event(uint8_t chid,uint8_t opcode,uint8_t a,uint8_t b) {
 void mynth_play_song(const void *v,uint16_t c) {
 
   mynth_release_all();
-  mynth_reset_all();
+  mynth_reset_completely();
 
   if (!v||(c<4)) { // null or too small to be a song: no song
     mynth.song=0;

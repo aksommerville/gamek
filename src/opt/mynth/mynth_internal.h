@@ -68,7 +68,8 @@ extern struct mynth {
   const int16_t *wavev[MYNTH_WAVE_COUNT];
 } mynth;
 
-void mynth_reset_all();
+void mynth_reset_all(); // retains most controller state
+void mynth_reset_completely(); // return all controllers to initial state
 void mynth_stop_voices_for_channel(uint8_t chid);
 void mynth_release_voices_for_channel(uint8_t chid);
 void mynth_release_all();
