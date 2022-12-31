@@ -214,7 +214,7 @@ int akx11_init_fb_gx(struct akx11 *akx11,const struct akx11_setup *setup) {
   }
   glBindTexture(GL_TEXTURE_2D,akx11->fbtexid);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,akx11->fbmagfilter=GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
   
@@ -389,4 +389,28 @@ int akx11_init_finish(struct akx11 *akx11,const struct akx11_setup *setup) {
   akx11_show_cursor(akx11,0); // our default
 
   return 0;
+}
+
+/* Reconsider scaling filter (AKX11_VIDEO_MODE_FB_GX only)
+ */
+ 
+void akx11_reconsider_scaling_filter(struct akx11 *akx11) {
+  if (!akx11->fbtexid) return;
+  if ((akx11->fbw<1)||(akx11->fbh<1)) return;
+  int xscale=akx11->w/akx11->fbw;
+  int yscale=akx11->h/akx11->fbh;
+  int scale=(xscale<yscale)?xscale:yscale;
+  if (scale<1) return; // Will use MIN filter, which is always LINEAR.
+  
+  /* An arbitrary choice: How much larger than framebuffer must the window be before we switch to crisp-pixel scaling?
+   * With crisp pixels, the user will will see some pixels at (threshold) size, and some at (threshold+1).
+   * To my eye, the aliasing in a 1-pixel checkboard is tolerable at 4.
+   * 3 is a reasonable choice too, just a little too aliasy in bad cases, in my opinion.
+   */
+  const int threshold=4;
+  
+  int filter=(scale<threshold)?GL_LINEAR:GL_NEAREST;
+  if (filter==akx11->fbmagfilter) return;
+  glBindTexture(GL_TEXTURE_2D,akx11->fbtexid);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,akx11->fbmagfilter=filter);
 }

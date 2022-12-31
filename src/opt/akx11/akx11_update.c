@@ -89,6 +89,7 @@ static int akx11_evt_configure(struct akx11 *akx11,XConfigureEvent *evt) {
     akx11->dstdirty=1;
     akx11->w=nw;
     akx11->h=nh;
+    akx11_reconsider_scaling_filter(akx11);
     if (akx11->delegate.resize) {
       akx11->delegate.resize(akx11->delegate.userdata,nw,nh);
     }

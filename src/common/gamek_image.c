@@ -29,6 +29,16 @@ uint32_t gamek_image_pixel_from_rgba(uint8_t fmt,uint8_t r,uint8_t g,uint8_t b,u
   return 0;
 }
 
+uint8_t gamek_image_format_pixel_size_bits(uint8_t fmt) {
+  switch (fmt) {
+    case GAMEK_IMGFMT_RGBX:
+      return 32;
+    case GAMEK_IMGFMT_BGR332:
+      return 8;
+  }
+  return 0;
+}
+
 /* Decode serial image.
  */
 

@@ -49,6 +49,8 @@ struct akx11 *akx11_new(
     return 0;
   }
   
+  akx11_reconsider_scaling_filter(akx11);
+  
   return akx11;
 }
 

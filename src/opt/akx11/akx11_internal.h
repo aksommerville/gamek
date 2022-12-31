@@ -63,6 +63,7 @@ struct akx11 {
   
   // Used by typical GX and FB modes.
   GLuint fbtexid;
+  int fbmagfilter;
   uint8_t *fb;
   int fbw,fbh;
   int dstdirty; // Nonzero to recalculate bounds next render.
@@ -105,5 +106,8 @@ void akx11_scale_bgr332(void *dst,const void *src,int w,int h,int scale,uint8_t 
 void akx11_scale_y1(void *dst,const void *src,int w,int h,int scale);
 void akx11_scale_y8(void *dst,const void *src,int w,int h,int scale);
 void akx11_scale_same32(void *dst,const void *src,int w,int h,int scale);
+
+// Call whenever (w,h) change so we can decide whether GL_TEXTURE_MAG_FILTER should be GL_LINEAR or GL_NEAREST.
+void akx11_reconsider_scaling_filter(struct akx11 *akx11);
 
 #endif

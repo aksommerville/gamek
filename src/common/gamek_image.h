@@ -72,6 +72,7 @@ void gamek_image_render_glyph(
 );
 
 uint32_t gamek_image_pixel_from_rgba(uint8_t fmt,uint8_t r,uint8_t g,uint8_t b,uint8_t a);
+uint8_t gamek_image_format_pixel_size_bits(uint8_t fmt);
 
 /* Iterator.
  * These read images bytewise.

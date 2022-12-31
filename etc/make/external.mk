@@ -29,7 +29,7 @@ define TARGET_RULES
   $$(MIDDIR_$1)/%.o:          src/%.c;$$(PRECMD) $$($1_CC) -I$(GAMEK_ROOT)/out/$1/include -o$$@ $$<
   $$(MIDDIR_$1)/%.o:$$(MIDDIR_$1)/%.c;$$(PRECMD) $$($1_CC) -I$(GAMEK_ROOT)/out/$1/include -o$$@ $$<
   $$(MIDDIR_$1)/%.c:src/%;$$(PRECMD) $(GAMEK_ROOT)/out/tool/mkdata -o$$@ -i$$<
-  $1-run:$$(EXE_$1);$$(EXE_$1)
+  $1-run:$$(EXE_$1);$$(EXE_$1) --input=$(GAMEK_ROOT)/etc/input.cfg
 endef
 
 $(foreach T,$(GAMEK_TARGETS),$(eval $(call TARGET_RULES,$T)))
