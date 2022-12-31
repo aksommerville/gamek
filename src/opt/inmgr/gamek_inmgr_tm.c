@@ -191,6 +191,7 @@ struct gamek_inmgr_tm_btn *gamek_inmgr_tm_btnv_append(struct gamek_inmgr_tm *tm)
 #define GAMEK_BTNIX_CD      15
  
 struct gamek_inmgr_tmsyn_context {
+  uint32_t always_flags;
   uint16_t buttons;
   int count_by_btnid[16];
 };
@@ -222,7 +223,7 @@ static int gamek_inmgr_tm_add_twostate(
   btn->srcbtnid=srcbtnid;
   btn->srclo=1;
   btn->srchi=INT_MAX;
-  btn->flags=0;
+  btn->flags=ctx->always_flags;
   btn->dstbtnid=dstbtnid;
   ctx->buttons|=dstbtnid;
   ctx->count_by_btnid[ix]++;
@@ -243,7 +244,7 @@ static int gamek_inmgr_tm_add_action(
   btn->srcbtnid=srcbtnid;
   btn->srclo=1;
   btn->srchi=INT_MAX;
-  btn->flags=GAMEK_INMGR_TM_BTN_FLAG_ACTION;
+  btn->flags=ctx->always_flags|GAMEK_INMGR_TM_BTN_FLAG_ACTION;
   btn->dstbtnid=actionid;
   return 0;
 }
@@ -275,14 +276,14 @@ static int gamek_inmgr_tm_add_axis(
   btn->srcbtnid=cap->btnid;
   btn->srclo=INT_MIN;
   btn->srchi=midlo-1;
-  btn->flags=0;
+  btn->flags=ctx->always_flags;
   btn->dstbtnid=(dstbtnid&(GAMEK_BUTTON_LEFT|GAMEK_BUTTON_UP));
   
   if (!(btn=gamek_inmgr_tm_btnv_append(tm))) return -1;
   btn->srcbtnid=cap->btnid;
   btn->srclo=midhi+1;
   btn->srchi=INT_MAX;
-  btn->flags=0;
+  btn->flags=ctx->always_flags;
   btn->dstbtnid=(dstbtnid&(GAMEK_BUTTON_RIGHT|GAMEK_BUTTON_DOWN));
   
   ctx->buttons|=dstbtnid;
@@ -310,7 +311,7 @@ static int gamek_inmgr_tm_add_hat(
   btn->srcbtnid=cap->btnid;
   btn->srclo=cap->lo;
   btn->srchi=cap->hi;
-  btn->flags=0;
+  btn->flags=ctx->always_flags;
   btn->dstbtnid=GAMEK_BUTTON_HAT;
   ctx->buttons|=GAMEK_BUTTON_HAT;
   ctx->count_by_btnid[GAMEK_BTNIX_LEFT]++;
@@ -452,6 +453,11 @@ static int gamek_inmgr_synthesize_template_inner(
 ) {
 
   struct gamek_inmgr_tmsyn_context ctx={0};
+  
+  // The system keyboard (all IDs zero), takes the extra flag LOWPRIORITY. It doesn't advance playerid_next.
+  if (!greeting->id&&!greeting->vid&&!greeting->pid) {
+    ctx.always_flags=GAMEK_INMGR_TM_BTN_FLAG_LOWPRIORITY;
+  }
 
   const struct gamek_inmgr_joystick_capability *cap=greeting->capv;
   int i=greeting->capc;

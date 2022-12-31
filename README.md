@@ -34,3 +34,9 @@ dyld: lazy symbol binding failed: Symbol not found: ____chkstk_darwin
   Referenced from: /Users/andy/proj/thirdparty/wasi-sdk-15.0/bin/clang (which was built for Mac OS X 11.6)
   Expected in: /usr/lib/libSystem.B.dylib
 - [ ] Might need to simplify Mynth more aggressively. "snakeshakin" seems to push Tiny's limits.
+- [ ] Can we expose the framebuffer dimensions at init? Kind of important to know, before the first render.
+- [x] evdev or inmgr: First joystick should be player 1, same as the keyboard.
+- [x] evdev or inmgr: Not getting CD=0 after a disconnect.
+- [x] linux: input events are firing before init! (macos is probably affected too)
+- [ ] inmgr: dynamic player limit. currently hard-coded at 16
+- - Also, consider reusing gap playerid. eg you disconnect player 2 then reconnect it. Today that becomes player 3 instead of reusing 2.

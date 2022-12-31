@@ -60,6 +60,18 @@ void gamek_image_blit(
   int16_t w,int16_t h,uint8_t xform
 );
 
+/* Convenience to render a square tile from a tilesheet up to 16x16 cells.
+ * (dstx,dsty) is the center of the output.
+ * (tilesize) is the width and height of a single tile.
+ * (tileid) reads LRTB, 16 tiles per row (regardless of the image's actual size).
+ * So tile (0,0) is 0x00, (1,0) is 0x01, (0,1) is 0x10, (15,15) is 0xff, etc.
+ */
+void gamek_image_blit_tile(
+  struct gamek_image *dst,int16_t dstx,int16_t dsty,
+  const struct gamek_image *src,int16_t tilesize,
+  uint8_t tileid,uint8_t xform
+);
+
 /* A special kind of blitting, from a 1-bit source with no more than 32 pixels.
  * The set bits in source get the new color, zeroes are transparent.
  * Pixels in (src) are packed big-endianly, 0x80000000 is the top left corner.

@@ -1,6 +1,7 @@
 #include "linux_internal.h"
 #include "opt/argv/gamek_argv.h"
 #include <signal.h>
+#include <time.h>
 
 struct gamek_linux gamek_linux={0};
 
@@ -187,6 +188,9 @@ int main(int argc,char **argv) {
   if (linux_input_init()<0) return 1;
   if (linux_audio_init()<0) return 1;
   
+  //TODO Should this be configurable somehow?
+  srand(time(0));
+  
   if (gamek_client.init) {
     if (gamek_client.init()<0) return 1;
   }
@@ -195,6 +199,9 @@ int main(int argc,char **argv) {
   if (gamek_linux.alsapcm) {
     alsapcm_set_running(gamek_linux.alsapcm,1);
   }
+  
+  // Input delivery was suspended at init. OK to begin it now.
+  gamek_inmgr_enable(gamek_linux.inmgr,1);
   
   linux_perfmon_begin();
   gamek_linux.nexttime=linux_now_us();

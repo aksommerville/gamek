@@ -107,6 +107,7 @@ int linux_input_init() {
     .config_dirty=_cb_inmgr_config_dirty,
   };
   if (!(gamek_linux.inmgr=gamek_inmgr_new(&idelegate))) return -1;
+  gamek_inmgr_enable(gamek_linux.inmgr,0);
   if (gamek_linux.input_cfg_path) {
     if (gamek_inmgr_configure_file(gamek_linux.inmgr,gamek_linux.input_cfg_path)<0) {
       fprintf(stderr,"%s:WARNING: Failed to apply input config.\n",gamek_linux.input_cfg_path);

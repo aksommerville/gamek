@@ -298,6 +298,7 @@ static int gamek_macos_input_init() {
     .config_dirty=gamek_macos_cb_inmgr_config_dirty,
   };
   if (!(gamek_macos.inmgr=gamek_inmgr_new(&idelegate))) return -1;
+  gamek_inmgr_enable(gamek_macos.inmgr,0);
   if (gamek_macos.input_cfg_path) {
     if (gamek_inmgr_configure_file(gamek_macos.inmgr,gamek_macos.input_cfg_path)<0) {
       fprintf(stderr,"%s: Failed to apply input config.\n",gamek_macos.input_cfg_path);
@@ -426,6 +427,8 @@ static int gamek_macos_cb_init(void *userdata) {
     fprintf(stderr,"Failed to initialize client app\n");
     return -1;
   }
+  
+  gamek_inmgr_enable(gamek_macos.inmgr,1);
   
   return 0;
 }

@@ -27,6 +27,7 @@ struct gamek_inmgr *gamek_inmgr_new(
   if (!inmgr) return 0;
   
   inmgr->delegate=*delegate;
+  inmgr->enable=1;
   inmgr->playerid_next=1;
   inmgr->playerid_max=16; // TODO expose via api
   
@@ -96,4 +97,52 @@ struct gamek_inmgr_map *gamek_inmgr_mapv_insert(struct gamek_inmgr *inmgr,int p,
   }
   
   return map;
+}
+
+/* Enable/disable.
+ */
+ 
+void gamek_inmgr_enable(struct gamek_inmgr *inmgr,int enable) {
+  if (!inmgr) return;
+  
+  if (enable&&!inmgr->enable) {
+    inmgr->enable=1;
+    // Trigger callbacks for any current player state that doesn't match the state when we disabled.
+    if (inmgr->delegate.button) {
+      const int16_t *prev=inmgr->state_at_disable;
+      const int16_t *next=inmgr->state_by_playerid;
+      int playerid=0; for (;playerid<256;playerid++,prev++,next++) {
+        if (*prev==*next) continue;
+      
+        // CD=1 must come first.
+        if (((*next)&GAMEK_BUTTON_CD)&&!((*prev)&GAMEK_BUTTON_CD)) {
+          inmgr->delegate.button(playerid,GAMEK_BUTTON_CD,1,inmgr->delegate.userdata);
+        }
+      
+        // Order not important for other bits.
+        uint16_t on=((*next)&~(*prev))&~GAMEK_BUTTON_CD;
+        uint16_t off=((*prev)&!(*next))&~GAMEK_BUTTON_CD;
+        if (on) {
+          uint16_t bit=0x8000; for (;bit;bit>>=1) {
+            if (on&bit) inmgr->delegate.button(playerid,bit,1,inmgr->delegate.userdata);
+          }
+        }
+        if (off) {
+          uint16_t bit=0x8000; for (;bit;bit>>=1) {
+            if (off&bit) inmgr->delegate.button(playerid,bit,0,inmgr->delegate.userdata);
+          }
+        }
+      
+        // CD=0 must come last.
+        if (!((*next)&GAMEK_BUTTON_CD)&&((*prev)&GAMEK_BUTTON_CD)) {
+          inmgr->delegate.button(playerid,GAMEK_BUTTON_CD,0,inmgr->delegate.userdata);
+        }
+      }
+    }
+    
+  } else if (!enable&&inmgr->enable) {
+    inmgr->enable=0;
+    // Record the full player state for later examination.
+    memcpy(inmgr->state_at_disable,inmgr->state_by_playerid,sizeof(inmgr->state_by_playerid));
+  }
 }

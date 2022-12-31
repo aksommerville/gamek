@@ -58,6 +58,7 @@ struct gamek_inmgr_midi {
 struct gamek_inmgr {
   struct gamek_inmgr_delegate delegate;
   int ready;
+  int enable;
   
   /* Live maps are listed per button, all devices combined in one list.
    * Not sure whether it makes sense to structure this in two levels, device then button?
@@ -68,6 +69,7 @@ struct gamek_inmgr {
   int mapc,mapa;
   
   uint16_t state_by_playerid[256];
+  uint16_t state_at_disable[256];
   uint8_t playerid_next;
   uint8_t playerid_max;
   

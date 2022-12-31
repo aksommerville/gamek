@@ -196,6 +196,21 @@ void gamek_image_blit(
   gamek_image_blit_inner_unchecked(dst,dstx,dsty,src,srcx,srcy,w,h,xform);
 }
 
+/* Blit tile, convenience.
+ */
+ 
+void gamek_image_blit_tile(
+  struct gamek_image *dst,int16_t dstx,int16_t dsty,
+  const struct gamek_image *src,int16_t tilesize,
+  uint8_t tileid,uint8_t xform
+) {
+  gamek_image_blit(
+    dst,dstx-(tilesize>>1),dsty-(tilesize>>1),
+    src,(tileid&0x0f)*tilesize,(tileid>>4)*tilesize,
+    tilesize,tilesize,xform
+  );
+}
+
 /* Render a glyph.
  */
 

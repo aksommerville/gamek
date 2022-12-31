@@ -14,7 +14,9 @@ void gamek_inmgr_send_button(struct gamek_inmgr *inmgr,uint8_t playerid,uint16_t
     if (!(inmgr->state_by_playerid[playerid]&btnid)) return;
     inmgr->state_by_playerid[playerid]&=~btnid;
   }
-  if (inmgr->delegate.button) inmgr->delegate.button(playerid,btnid,value,inmgr->delegate.userdata);
+  if (inmgr->enable) {
+    if (inmgr->delegate.button) inmgr->delegate.button(playerid,btnid,value,inmgr->delegate.userdata);
+  }
   
   // Now, if the player's own button changed, cascade it to the aggregate state.
   if (value) {
@@ -24,7 +26,9 @@ void gamek_inmgr_send_button(struct gamek_inmgr *inmgr,uint8_t playerid,uint16_t
     if (!(inmgr->state_by_playerid[0]&btnid)) return;
     inmgr->state_by_playerid[0]&=~btnid;
   }
-  if (inmgr->delegate.button) inmgr->delegate.button(0,btnid,value,inmgr->delegate.userdata);
+  if (inmgr->enable) {
+    if (inmgr->delegate.button) inmgr->delegate.button(0,btnid,value,inmgr->delegate.userdata);
+  }
 }
 
 /* Consider hat change and notify delegate accordingly.
@@ -57,6 +61,7 @@ static void gamek_inmgr_send_hat(struct gamek_inmgr *inmgr,uint8_t playerid,uint
  */
 
 static void gamek_inmgr_send_action(struct gamek_inmgr *inmgr,uint16_t actionid) {
+  if (!inmgr->enable) return; // when disabled, discard all actions blindly
   if (inmgr->delegate.action) inmgr->delegate.action(actionid,inmgr->delegate.userdata);
 }
 
@@ -179,10 +184,10 @@ int gamek_inmgr_joystick_disconnect(struct gamek_inmgr *inmgr,const void *id) {
   struct gamek_inmgr_map *map=inmgr->mapv+mapp;
   int i=mapc;
   for (;i-->0;map++) {
-    if (!map->dstvalue) continue;
     if (!map->playerid) continue; // stateless
     dropped_playerid[map->playerid]=1;
     if (map->playerid>playeridhi) playeridhi=map->playerid;
+    if (!map->dstvalue) continue;
     gamek_inmgr_send_button(inmgr,map->playerid,map->dstbtnid,0);
   }
   
@@ -252,6 +257,7 @@ int gamek_inmgr_keyboard_event(struct gamek_inmgr *inmgr,int keycode,int value) 
  
 int gamek_inmgr_midi_events(struct gamek_inmgr *inmgr,int devid,const void *_v,int c) {
   if (!inmgr->delegate.midi) return 0; // ...why did you call this function, owner?
+  if (!inmgr->enable) return 0; // Discard all when disabled. Hopefully we don't get any important state changes...
   
   // Find the device.
   struct gamek_inmgr_midi *device=0;

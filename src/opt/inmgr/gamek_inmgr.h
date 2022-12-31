@@ -51,6 +51,14 @@ int gamek_inmgr_save_configuration(struct gamek_inmgr *inmgr,const char *path);
 // Call when you're done adding configuration.
 int gamek_inmgr_ready(struct gamek_inmgr *inmgr);
 
+/* Option to suppress throughput.
+ * When disabled, your callbacks will not fire.
+ * Actions and MIDI events will be dropped, and you'll get a fresh view of player state upon re-enabling.
+ * You can connect and disconnect devices while disabled, and the related events will defer until re-enable.
+ * New inmgr are enabled by default. You might want to disable right away, then re-enable when you're ready for input.
+ */
+void gamek_inmgr_enable(struct gamek_inmgr *inmgr,int enable);
+
 /* Joystick (or general input) events.
  ********************************************************************/
 
