@@ -23,7 +23,7 @@ Documentation is all in this repo too; see [/etc/doc](https://github.com/aksomme
 - - [ ] mswin
 - - [ ] thumby
 - [ ] Network?
-- [ ] Helper to spawn a new project.
+- [x] Helper to spawn a new project.
 - [ ] Standard demos
 - - [x] snake
 - - [ ] platformer: multiplayer, high resolution

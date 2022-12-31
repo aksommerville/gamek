@@ -3,6 +3,8 @@
 # There is no such opt unit as "macos", but we do use it as a compile-time flag. Leave it here.
 macos_OPT_ENABLE:=argv inmgr fs serial mynth macioc macwm machid macaudio macos
 
+THIS_MAKEFILE:=$(lastword $(MAKEFILE_LIST))
+
 # Compiler, etc. This part sometimes needs tweaking.
 macos_CCOPT:=-c -MMD -O3
 macos_CCDEF:= \
@@ -15,6 +17,7 @@ macos_CC:=gcc $(macos_CCOPT) $(macos_CCDEF) $(macos_CCINC) $(macos_CCWARN)
 macos_OBJC:=gcc -xobjective-c $(macos_CCOPT) $(macos_CCDEF) $(macos_CCINC) $(macos_CCWARN)
 macos_LD:=gcc
 macos_LDPOST:=-lm -framework Cocoa -framework Quartz -framework OpenGL -framework MetalKit -framework Metal -framework CoreGraphics -framework IOKit -framework AudioUnit
+macos_AR:=ar rc
 
 macos_DATA_SRC:=$(filter src/data/% %.png %.mid,$(SRCFILES))
 macos_DATA_SRC:=$(filter-out src/pf/macos/template/%,$(macos_DATA_SRC))
@@ -36,6 +39,29 @@ $(MIDDIR)/%.o:$(MIDDIR)/%.c;$(PRECMD) $(macos_CC) -o$@ $<
 $(MIDDIR)/%.o:src/%.m      ;$(PRECMD) $(macos_OBJC) -o$@ $<
 $(MIDDIR)/%.o:$(MIDDIR)/%.m;$(PRECMD) $(macos_OBJC) -o$@ $<
 
+macos_OFILES_LIBGAMEK:=$(filter-out $(MIDDIR)/data/%,$(macos_OFILES_COMMON))
+macos_LIBGAMEK:=$(OUTDIR)/libgamek.a
+all:$(macos_LIBGAMEK)
+$(macos_LIBGAMEK):$(macos_OFILES_LIBGAMEK);$(PRECMD) $(macos_AR) $@ $^
+
+macos_CONFIG_MK:=$(OUTDIR)/config.mk
+all:$(macosCONFIG_MK)
+$(macos_CONFIG_MK):$(THIS_MAKEFILE) etc/config.mk;$(PRECMD) echo \
+  "macos_CC:=$(filter-out -DGAMEK_PLATFORM_HEADER%,$(macos_CC))\n" \
+  "macos_LD:=$(macos_LD)\n" \
+  "macos_LDPOST:=\$$(GAMEK_ROOT)/$(macos_LIBGAMEK) $(macos_LDPOST)\n" \
+  >$@
+
+define macos_HEADER_RULES
+  macos_HEADER_$1_DST:=$(OUTDIR)/include/$(notdir $1)
+  generic-headers:$$(macos_HEADER_$1_DST)
+  $$(macos_HEADER_$1_DST):$1;$$(PRECMD) cp $$< $$@
+endef
+$(foreach F, \
+  src/pf/gamek_pf.h src/common/gamek_image.h src/common/gamek_font.h \
+,$(eval $(call macos_HEADER_RULES,$F)))
+all:generic-headers
+
 macos_ICONS_DIR:=src/pf/macos/template/appicon.iconset
 macos_ICONS:=$(wildcard $(macos_ICONS_DIR)/*)
 
@@ -44,7 +70,7 @@ macos_PLIST_COMMAND=sed 's/EXE_NAME/$1/g;s/BUNDLE_IDENTIFIER/$(macos_BUNDLE_PREF
 macos_XIB_COMMAND=sed 's/APP_NAME/$1/g' $$< > $$@
 
 define macos_DEMO_RULES # $1=name
-  macos_DEMO_$1_BUNDLE:=$(OUTDIR)/$1.app
+  macos_DEMO_$1_BUNDLE:=$(OUTDIR)/demo/$1.app
   macos_DEMO_$1_PLIST:=$$(macos_DEMO_$1_BUNDLE)/Contents/Info.plist
   macos_DEMO_$1_XIB:=$(MIDDIR)/demo/$1/Main.xib
   macos_DEMO_$1_NIB:=$$(macos_DEMO_$1_BUNDLE)/Contents/Resources/Main.nib

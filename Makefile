@@ -19,4 +19,6 @@ $(foreach T,$(GAMEK_TARGETS), \
   $(eval include etc/target/$T.mk) \
 )
 
+project:all;etc/tool/project.sh
+
 endif

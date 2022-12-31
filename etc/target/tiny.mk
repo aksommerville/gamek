@@ -1,6 +1,8 @@
 # tiny.mk
 # I composed these rules by running arduino-builder and scraping it.
 
+THIS_MAKEFILE:=$(lastword $(MAKEFILE_LIST))
+
 tiny_OPT_ENABLE:=mynth
 
 tiny_TOOLCHAIN:=$(tiny_ARDUINO_HOME)/packages/arduino/tools/arm-none-eabi-gcc/$(tiny_GCC_VERSION)
@@ -40,6 +42,7 @@ tiny_LD_SOLO:=$(tiny_TOOLCHAIN)/bin/arm-none-eabi-g++ $(tiny_LDOPT_SOLO) $(tiny_
 tiny_LD_HOSTED:=$(tiny_TOOLCHAIN)/bin/arm-none-eabi-g++ $(tiny_LDOPT_HOSTED) $(tiny_LDOPT)
 
 tiny_OBJCOPY:=$(tiny_TOOLCHAIN)/bin/arm-none-eabi-objcopy
+tiny_AR:=$(tiny_TOOLCHAIN)/bin/arm-none-eabi-ar rc
 
 #TODO Are any of these unnecessary?
 tiny_EXTFILES:= \
@@ -113,11 +116,36 @@ $(foreach S,src $(MIDDIR) $(tiny_ARDUINO_HOME) $(tiny_ARDUINO_IDE_HOME),$(eval $
 
 tiny_OFILES_COMMON:=$(filter-out $(MIDDIR)/demo/%,$(tiny_OFILES))
 
+tiny_OFILES_LIBGAMEK:=$(filter-out $(MIDDIR)/data/%,$(tiny_OFILES_COMMON))
+tiny_LIBGAMEK:=$(OUTDIR)/libgamek.a
+all:$(tiny_LIBGAMEK)
+$(tiny_LIBGAMEK):$(tiny_OFILES_LIBGAMEK);$(PRECMD) $(tiny_AR) $@ $^
+
+#TODO Tiny has separate linker commands for Hosted vs Solo (launch via SD card or flash direct to device).
+# I want to expose both for clients' consumption. How?
+tiny_CONFIG_MK:=$(OUTDIR)/config.mk
+all:$(tiny_CONFIG_MK)
+$(tiny_CONFIG_MK):$(THIS_MAKEFILE) etc/config.mk;$(PRECMD) echo \
+  "tiny_CC:=$(filter-out -DGAMEK_PLATFORM_HEADER%,$(tiny_CC))\n" \
+  "tiny_LD:=$(tiny_LD_HOSTED)\n" \
+  "tiny_LDPOST:=\$$(GAMEK_ROOT)/$(tiny_LIBGAMEK) $(tiny_LDPOST)\n" \
+  >$@
+
+define tiny_HEADER_RULES
+  tiny_HEADER_$1_DST:=$(OUTDIR)/include/$(notdir $1)
+  generic-headers:$$(tiny_HEADER_$1_DST)
+  $$(tiny_HEADER_$1_DST):$1;$$(PRECMD) cp $$< $$@
+endef
+$(foreach F, \
+  src/pf/gamek_pf.h src/common/gamek_image.h src/common/gamek_font.h \
+,$(eval $(call tiny_HEADER_RULES,$F)))
+all:generic-headers
+
 define tiny_DEMO_RULES # $1=name
-  tiny_DEMO_$1_HOSTED_ELF:=$(OUTDIR)/$1-hosted.elf
-  tiny_DEMO_$1_SOLO_ELF:=$(OUTDIR)/$1-solo.elf
-  tiny_DEMO_$1_HOSTED_BIN:=$(OUTDIR)/$1-hosted.bin
-  tiny_DEMO_$1_SOLO_BIN:=$(OUTDIR)/$1-solo.bin
+  tiny_DEMO_$1_HOSTED_ELF:=$(MIDDIR)/demo/$1-hosted.elf
+  tiny_DEMO_$1_SOLO_ELF:=$(MIDDIR)/demo/$1-solo.elf
+  tiny_DEMO_$1_HOSTED_BIN:=$(OUTDIR)/demo/$1-hosted.bin
+  tiny_DEMO_$1_SOLO_BIN:=$(OUTDIR)/demo/$1-solo.bin
   tiny_OFILES_$1:=$(tiny_OFILES_COMMON) $(filter $(MIDDIR)/demo/$1/%,$(tiny_OFILES))
   $$(tiny_DEMO_$1_HOSTED_ELF):$$(tiny_OFILES_$1);$$(PRECMD) $(tiny_LD_HOSTED) -o$$@ $$^ $(tiny_LDPOST)
   $$(tiny_DEMO_$1_SOLO_ELF):$$(tiny_OFILES_$1);$$(PRECMD) $(tiny_LD_SOLO) -o$$@ $$^ $(tiny_LDPOST)
@@ -127,7 +155,7 @@ define tiny_DEMO_RULES # $1=name
 endef
 $(foreach D,$(DEMOS),$(eval $(call tiny_DEMO_RULES,$D)))
 
-tiny-run-%:$(OUTDIR)/%-solo.bin; \
+tiny-run-%:$(OUTDIR)/demo/%-solo.bin; \
   stty -F /dev/$(tiny_PORT) 1200 ; \
   sleep 2 ; \
   $(tiny_ARDUINO_HOME)/packages/arduino/tools/bossac/1.7.0-arduino3/bossac -i -d --port=$(tiny_PORT) -U true -i -e -w $< -R
