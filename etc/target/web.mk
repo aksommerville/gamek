@@ -22,7 +22,7 @@ web_AR:=$(web_WASI_SDK)/bin/ar rc
 
 # Digest data files.
 # All data files get turned into C code and compiled like sources.
-web_DATA_SRC:=$(filter src/data/% %.png %.mid %.wave,$(SRCFILES))
+web_DATA_SRC:=$(filter src/data/% %.png %.mid %.wave %.map,$(SRCFILES))
 web_DATA_C:=$(patsubst src/%,$(MIDDIR)/%.c,$(web_DATA_SRC))
 # Rules for more specific patterns could go here, eg if you need some other mkdata flag for images or whatever.
 $(MIDDIR)/%.c:src/% $(TOOL_mkdata_EXE);$(PRECMD) $(TOOL_mkdata_EXE) -o$@ -i$<
@@ -33,7 +33,8 @@ web_SRCFILES:= \
   $(filter-out src/pf/% src/opt/% src/tool/% src/data/%,$(SRCFILES)) \
   $(filter src/pf/web/%,$(SRCFILES)) \
   $(filter $(foreach U,$(web_OPT_ENABLE),src/opt/$U/%),$(SRCFILES)) \
-  $(web_DATA_C)
+  $(filter-out $(MIDDIR)/pf/%,$(web_DATA_C)) \
+  $(filter $(MIDDIR)/pf/web/%,$(web_DATA_C))
   
 web_CFILES:=$(filter %.c,$(web_SRCFILES))
 web_OFILES_ALL:=$(patsubst src/%,$(MIDDIR)/%,$(addsuffix .o,$(basename $(web_CFILES))))

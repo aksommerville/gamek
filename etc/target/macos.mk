@@ -19,7 +19,7 @@ macos_LD:=gcc
 macos_LDPOST:=-lm -framework Cocoa -framework Quartz -framework OpenGL -framework MetalKit -framework Metal -framework CoreGraphics -framework IOKit -framework AudioUnit
 macos_AR:=ar rc
 
-macos_DATA_SRC:=$(filter src/data/% %.png %.mid,$(SRCFILES))
+macos_DATA_SRC:=$(filter src/data/% %.png %.mid %.wave %.map,$(SRCFILES))
 macos_DATA_SRC:=$(filter-out src/pf/macos/template/%,$(macos_DATA_SRC))
 macos_DATA_C:=$(patsubst src/%,$(MIDDIR)/%.c,$(macos_DATA_SRC))
 $(MIDDIR)/%.c:src/% $(TOOL_mkdata_EXE);$(PRECMD) $(TOOL_mkdata_EXE) -o$@ -i$<
@@ -28,7 +28,8 @@ macos_SRCFILES:= \
   $(filter-out src/pf/% src/opt/% src/tool/% src/data/%,$(SRCFILES)) \
   $(filter src/pf/macos/%,$(SRCFILES)) \
   $(filter $(foreach U,$(macos_OPT_ENABLE),src/opt/$U/%),$(SRCFILES)) \
-  $(macos_DATA_C)
+  $(filter-out $(MIDDIR)/pf/%,$(macos_DATA_C)) \
+  $(filter $(MIDDIR)/pf/macos/%,$(macos_DATA_C))
   
 macos_CFILES:=$(filter %.c %.m,$(macos_SRCFILES))
 macos_OFILES_ALL:=$(patsubst src/%,$(MIDDIR)/%,$(addsuffix .o,$(basename $(macos_CFILES))))

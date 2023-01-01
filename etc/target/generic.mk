@@ -21,7 +21,7 @@ generic_AR:=ar rc
 
 # Digest data files.
 # All data files get turned into C code and compiled like sources.
-generic_DATA_SRC:=$(filter src/data/% %.png %.mid %.wave,$(SRCFILES))
+generic_DATA_SRC:=$(filter src/data/% %.png %.mid %.wave %.map,$(SRCFILES))
 generic_DATA_C:=$(patsubst src/%,$(MIDDIR)/%.c,$(generic_DATA_SRC))
 # Rules for more specific patterns could go here, eg if you need some other mkdata flag for images or whatever.
 $(MIDDIR)/%.c:src/% $(TOOL_mkdata_EXE);$(PRECMD) $(TOOL_mkdata_EXE) -o$@ -i$<
@@ -32,7 +32,8 @@ generic_SRCFILES:= \
   $(filter-out src/pf/% src/opt/% src/tool/% src/data/%,$(SRCFILES)) \
   $(filter src/pf/generic/%,$(SRCFILES)) \
   $(filter $(foreach U,$(generic_OPT_ENABLE),src/opt/$U/%),$(SRCFILES)) \
-  $(generic_DATA_C)
+  $(filter-out $(MIDDIR)/pf/%,$(generic_DATA_C)) \
+  $(filter $(MIDDIR)/pf/generic/%,$(generic_DATA_C))
   
 generic_CFILES:=$(filter %.c,$(generic_SRCFILES))
 generic_OFILES_ALL:=$(patsubst src/%,$(MIDDIR)/%,$(addsuffix .o,$(basename $(generic_CFILES))))

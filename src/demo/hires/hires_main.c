@@ -1,8 +1,13 @@
 #include "pf/gamek_pf.h"
 #include "common/gamek_image.h"
 #include "common/gamek_font.h"
+#include "common/gamek_map.h"
+#include "dialogue.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
+#include <limits.h>
+#include <string.h>
 
 #define TILESIZE 16
 #define HERO_LIMIT 8
@@ -12,10 +17,12 @@
 
 extern const uint8_t font_g06[];
 extern const uint8_t graphics[];
+extern const uint8_t home[];
 
 static struct gamek_image img_graphics={0};
+static struct gamek_map map={0};
 
-static int16_t worldw=480,worldh=270; // will update at first render
+static int16_t worldw=480,worldh=256; // will update at first render
 
 /* herov is indexed by (playerid-1).
  * If (tileid_head) zero, it's unused.
@@ -28,6 +35,8 @@ static struct hero {
   uint8_t animframe; // 0..7, which legs to display
   uint8_t animclock;
   int8_t dx; // -1,0,1: Horizontal axis of dpad
+  struct gamek_image *dialogue;
+  int16_t dialogue_dx; // left edge of dialogue box relative to hero's horizontal center
 } herov[HERO_LIMIT]={0};
 
 /* Initialize app.
@@ -35,18 +44,100 @@ static struct hero {
  */
 
 static int8_t hires_init() {
-  fprintf(stderr,"%s\n",__func__);
   if (gamek_image_decode(&img_graphics,graphics,0x7fffffff)<0) return -1;
+  if (gamek_map_decode(&map,home)<0) return -1;
   return 0;
+}
+
+/* Fake printf. When building for web, and I think tiny too, there is no libc snprintf.
+ * Like snprintf, we always NUL-terminate.
+ */
+ 
+static uint16_t int_repr(char *dst,uint16_t dsta,int v) {
+  if (v<0) {
+    uint16_t dstc=2;
+    int limit=-10;
+    while (v<=limit) { dstc++; if (limit<INT_MIN/10) break; limit*=10; }
+    if (dstc>dsta) return dstc;
+    uint16_t i=dstc;
+    for (;i-->1;v/=10) dst[i]='0'-v%10;
+    dst[0]='-';
+    return dstc;
+  } else {
+    uint16_t dstc=1;
+    int limit=10;
+    while (v>=limit) { dstc++; if (limit>INT_MAX/10) break; limit*=10; }
+    if (dstc>dsta) return dstc;
+    uint16_t i=dstc;
+    for (;i-->0;v/=10) dst[i]='0'+v%10;
+    return dstc;
+  }
+}
+ 
+static int fake_printf(char *dst,uint16_t dsta,const char *fmt,...) {
+  if (dsta<1) return 0;
+  dst[0]=0;
+  if (!fmt) return 0;
+  va_list vargs;
+  va_start(vargs,fmt);
+  uint16_t dstc=0;
+  for (;*fmt;fmt++) {
+    if (*fmt=='%') {
+      int v=va_arg(vargs,int);
+      dstc+=int_repr(dst+dstc,dsta-dstc,v);
+    } else {
+      dst[dstc++]=*fmt;
+    }
+    if (dstc>=dsta) {
+      dst[dsta-1]=0;
+      return dsta-1;
+    }
+  }
+  dst[dstc]=0;
+  return dstc;
+}
+
+/* Count initialized heroes.
+ */
+ 
+static uint8_t count_heroes() {
+  uint8_t heroc=0;
+  uint8_t i=HERO_LIMIT;
+  const struct hero *hero=herov;
+  for (;i-->0;hero++) {
+    if (hero->tileid_head) heroc++;
+  }
+  return heroc;
 }
 
 /* Initialize one hero.
  */
  
 static void hero_init(struct hero *hero,uint8_t heroid) {
-  // There are three heads and three hairs. Pick one randomly.
-  hero->tileid_head=0x20+rand()%3;
-  hero->tileid_hair=0x23+rand()%3;
+
+  // There are three heads and three hairs. Pick one randomly, but the first three must be unique.
+  uint8_t headv[3]={0x20,0x21,0x22};
+  uint8_t headc=3;
+  uint8_t hairv[3]={0x23,0x24,0x25};
+  uint8_t hairc=3;
+  const struct hero *other=herov;
+  uint8_t i=HERO_LIMIT,j;
+  for (;i-->0;other++) {
+    if (!other->tileid_head) continue;
+    for (j=headc;j-->0;) if (headv[j]==other->tileid_head) {
+      headc--;
+      memmove(headv+j,headv+j+1,headc-j);
+    }
+    for (j=hairc;j-->0;) if (hairv[j]==other->tileid_hair) {
+      hairc--;
+      memmove(hairv+j,hairv+j+1,hairc-j);
+    }
+  }
+  if (!headc) hero->tileid_head=0x20+rand()%3;
+  else hero->tileid_head=headv[rand()%headc];
+  if (!hairc) hero->tileid_hair=0x23+rand()%3;
+  else hero->tileid_hair=hairv[rand()%hairc];
+
   // Position at ground level (1.5 tiles from bottom), and horizontally according to (heroid).
   hero->x=(heroid*worldw)/HERO_LIMIT+(worldw/(HERO_LIMIT<<1));
   hero->y=worldh-TILESIZE-(TILESIZE>>1);
@@ -81,6 +172,32 @@ static void hero_update(struct hero *hero) {
   }
 }
 
+/* Hero dialogue bubbles.
+ * Or should it be "monologue"?
+ */
+ 
+static void hero_begin_dialogue(struct hero *hero) {
+  if (hero->dialogue) return;
+  int heroc=count_heroes();
+  char msg[128];
+  int msgc;
+  if (heroc<=1) {
+    msgc=fake_printf(msg,sizeof(msg),"I'm lonely. Connect more joysticks!");
+  } else if (heroc<HERO_LIMIT) {
+    // A better-made game would deal with the plural here.
+    msgc=fake_printf(msg,sizeof(msg),"% friends is nice, but I'd rather have %. Connect more joysticks!",heroc-1,HERO_LIMIT-1);
+  } else {
+    msgc=fake_printf(msg,sizeof(msg),"Wow, where did you find % joysticks?",heroc);
+  }
+  hero->dialogue=dialogue_new(&hero->dialogue_dx,hero->x,worldw,&img_graphics,msg,msgc);
+}
+
+static void hero_end_dialogue(struct hero *hero) {
+  if (!hero->dialogue) return;
+  dialogue_del(hero->dialogue);
+  hero->dialogue=0;
+}
+
 /* Update.
  * This gets called at about 60 Hz.
  */
@@ -98,7 +215,6 @@ static void hires_update() {
  */
 
 static void hires_input_event(uint8_t playerid,uint16_t btnid,uint8_t value) {
-  fprintf(stderr,"%s %d.0x%04x=%d\n",__func__,playerid,btnid,value);
   if (playerid>0) {
     uint8_t heroid=playerid-1;
     if (heroid<HERO_LIMIT) {
@@ -120,10 +236,11 @@ static void hires_input_event(uint8_t playerid,uint16_t btnid,uint8_t value) {
         case GAMEK_BUTTON_LEFT: hero->dx=-1; hero->xform=GAMEK_XFORM_XREV; break;
         case GAMEK_BUTTON_RIGHT: hero->dx=1; hero->xform=0; break;
         case GAMEK_BUTTON_SOUTH: break; // jump?
-        case GAMEK_BUTTON_WEST: break; // fire? dash? run?
+        case GAMEK_BUTTON_WEST: hero_begin_dialogue(hero); break;
       } else switch (btnid) {
         case GAMEK_BUTTON_LEFT: if (hero->dx<0) { hero->dx=0; } break;
         case GAMEK_BUTTON_RIGHT: if (hero->dx>0) { hero->dx=0; } break;
+        case GAMEK_BUTTON_WEST: hero_end_dialogue(hero); break;
       }
     }
   }
@@ -135,31 +252,6 @@ static void hires_input_event(uint8_t playerid,uint16_t btnid,uint8_t value) {
  */
 
 static uint8_t hires_render(struct gamek_image *fb) {
-
-  #if 0 //XXX Testing scale-up aliasing with a checkerboard.
-  if (gamek_image_format_pixel_size_bits(fb->fmt)!=32) {
-    // We're going to touch pixels directly, and we'll assume 32 bits per pixel.
-    // That is correct for most platforms. Tiny, Thumby, and Pico will not work.
-    return 0;
-  }
-
-  // Fill with a 1-pixel checkerboard pattern.
-  uint32_t colorv[2]={
-    gamek_image_pixel_from_rgba(fb->fmt,0xf0,0xc0,0x00,0xff),
-    gamek_image_pixel_from_rgba(fb->fmt,0x40,0x30,0x00,0xff),
-  };
-  uint8_t *dstrow=fb->v;
-  int16_t yi=fb->h;
-  for (;yi-->0;dstrow+=fb->stride) {
-    uint32_t *dstp=(uint32_t*)dstrow;
-    uint8_t colorp=(yi&1);
-    int16_t xi=fb->w;
-    for (;xi-->0;dstp++) {
-      *dstp=colorv[colorp];
-      colorp^=1;
-    }
-  }
-  #endif
   
   //TODO I don't yet have a way to examine the framebuffer size before the first render.
   // Firgure something out. We ought to be setting (worldw) at init instead of here.
@@ -171,10 +263,18 @@ static uint8_t hires_render(struct gamek_image *fb) {
   gamek_image_fill_rect(fb,0,0,fb->w,fb->h,skycolor);
   
   // Terrain.
-  int16_t dstx=0;
-  int16_t dsty=fb->h-TILESIZE;
-  for (;dstx<fb->w;dstx+=TILESIZE) {
-    gamek_image_blit(fb,dstx,dsty,&img_graphics,TILESIZE,0,TILESIZE,TILESIZE,0);
+  // I've arranged for maps to be exactly the size of the framebuffer.
+  // Platforms can give us a different framebuffer size, and if that happens, this will get weird.
+  int16_t dsty=TILESIZE>>1;
+  const uint8_t *mapp=map.v;
+  uint8_t yi=map.h;
+  for (;yi-->0;dsty+=TILESIZE) {
+    int16_t dstx=TILESIZE>>1;
+    uint8_t xi=map.w;
+    for (;xi-->0;dstx+=TILESIZE,mapp++) {
+      if (!*mapp) continue; // tile zero is transparent and we skip it
+      gamek_image_blit_tile(fb,dstx,dsty,&img_graphics,TILESIZE,*mapp,0);
+    }
   }
   
   // Sprites.
@@ -185,9 +285,16 @@ static uint8_t hires_render(struct gamek_image *fb) {
     gamek_image_blit_tile(fb,hero->x,hero->y,&img_graphics,TILESIZE,0x30+hero->animframe,hero->xform);
     gamek_image_blit_tile(fb,hero->x,hero->y-TILESIZE,&img_graphics,TILESIZE,hero->tileid_head,hero->xform);
     gamek_image_blit_tile(fb,hero->x,hero->y-TILESIZE,&img_graphics,TILESIZE,hero->tileid_hair,hero->xform);
+    if (hero->dialogue) {
+      gamek_image_blit(
+        fb,hero->x+hero->dialogue_dx,hero->y-(TILESIZE*13)/8-hero->dialogue->h,
+        hero->dialogue,0,0,
+        hero->dialogue->w,hero->dialogue->h,
+        0
+      );
+    }
   }
   
-  //gamek_font_render_string(fb,10,10,gamek_image_pixel_from_rgba(fb->fmt,0xff,0xff,0xff,0xff),font_g06,"Hello cruel world!",-1);
   return 1;
 }
 
@@ -205,7 +312,7 @@ const struct gamek_client gamek_client={
    * It will show crisp pixels fullscreen, and linear interpolation otherwise.
    */
   .fbw=480,
-  .fbh=270,
+  .fbh=256,
   
   .iconrgba=0,
   .iconw=0,

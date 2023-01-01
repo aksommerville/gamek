@@ -88,7 +88,7 @@ tiny_EXTFILES:= \
 
 # Now do our usual build stuff...
   
-tiny_DATA_SRC:=$(filter src/data/% %.png %.mid %.wave,$(SRCFILES))
+tiny_DATA_SRC:=$(filter src/data/% %.png %.mid %.wave %.map,$(SRCFILES))
 tiny_DATA_C:=$(patsubst src/%,$(MIDDIR)/%.c,$(tiny_DATA_SRC))
 # Rules for more specific patterns could go here, eg if you need some other mkdata flag for images or whatever.
 $(MIDDIR)/%.c:src/% $(TOOL_mkdata_EXE);$(PRECMD) $(TOOL_mkdata_EXE) -o$@ -i$< --imgfmt=BGR332
@@ -97,7 +97,8 @@ tiny_SRCFILES:= \
   $(filter-out src/opt/% src/test/% src/tool/% src/pf/%,$(SRCFILES)) \
   $(filter src/pf/tiny/%,$(SRCFILES)) \
   $(filter $(addsuffix /%,$(addprefix src/opt/,$(tiny_OPT_ENABLE))),$(SRCFILES)) \
-  $(tiny_DATA_C)
+  $(filter-out $(MIDDIR)/pf/%,$(tiny_DATA_C)) \
+  $(filter $(MIDDIR)/pf/tiny/%,$(tiny_DATA_C))
 
 tiny_CFILES:=$(filter %.c %.cpp %.S,$(tiny_SRCFILES)) $(tiny_EXTFILES)
 tiny_OFILES:=$(patsubst src/%,$(MIDDIR)/%, \

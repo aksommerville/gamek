@@ -17,6 +17,7 @@ int mkdata_font_from_png(void *dst,const void *src,int srcc,const char *path);
 int mkdata_image_from_png(void *dst,const void *src,int srcc,const char *path,int imgfmt);
 int mkdata_song_from_midi(void *dst,const void *src,int srcc,const char *path);
 int mkdata_wavebin_from_wave(void *dst,const void *src,int srcc,const char *path);
+int mkdata_mapbin_from_map(void *dst,const void *src,int srcc,const char *path);
 
 /* Data formats.
  */
@@ -32,6 +33,8 @@ int mkdata_wavebin_from_wave(void *dst,const void *src,int srcc,const char *path
 #define MKDATA_FORMAT_song       8
 #define MKDATA_FORMAT_wave       9 /* Gamek ".wave" file, wave description as text. */
 #define MKDATA_FORMAT_wavebin   10 /* Gamek ".wave" file, internal representation (fixed-length PCM) */
+#define MKDATA_FORMAT_map       11 /* Gamek ".map" file, text. */
+#define MKDATA_FORMAT_mapbin    12 /* '', internal representation */
 
 #define MKDATA_FOR_EACH_FORMAT \
   _(binary) \
@@ -43,7 +46,9 @@ int mkdata_wavebin_from_wave(void *dst,const void *src,int srcc,const char *path
   _(image) \
   _(song) \
   _(wave) \
-  _(wavebin)
+  _(wavebin) \
+  _(map) \
+  _(mapbin)
   
 static const char *mkdata_format_repr(int format) {
   switch (format) {
@@ -120,6 +125,8 @@ static void mkdata_print_help() {
     "  song           Gamek song. Intermediate.\n"
     "  wave           Gamek audio wave. Input.\n"
     "  wavebin        Gamek audio wave. Intermediate.\n"
+    "  map            Gamek map. Input.\n"
+    "  mapbin         Gamek map. Intermediate.\n"
     "\n"
     "Options are usually inferred from input and output paths.\n"
     "\n"
@@ -229,9 +236,13 @@ static int mkdata_guess_format_from_suffix(const char *path) {
         if (!memcmp(sfx,"png",3)) return MKDATA_FORMAT_png;
         if (!memcmp(sfx,"mid",3)) return MKDATA_FORMAT_midi;
         if (!memcmp(sfx,"wav",3)) return MKDATA_FORMAT_wav;
+        if (!memcmp(sfx,"map",3)) return MKDATA_FORMAT_map;
       } break;
     case 4: {
         if (!memcmp(sfx,"wave",4)) return MKDATA_FORMAT_wave;
+      } break;
+    case 6: {
+        if (!memcmp(sfx,"mapbin",6)) return MKDATA_FORMAT_mapbin;
       } break;
   }
   return -1;
@@ -251,6 +262,7 @@ static int mkdata_guess_format_from_directories(const char *path) {
   
   // Exceptions.
   if (fmt==MKDATA_FORMAT_wave) return MKDATA_FORMAT_wavebin; // "wave" is input-only. For our purposes, "wavebin" is correct.
+  if (fmt==MKDATA_FORMAT_map) return MKDATA_FORMAT_mapbin; // "map" works like "wave"
   
   return fmt;
 }
@@ -300,6 +312,7 @@ static int mkdata_resolve_formats(const void *src,int srcc) {
       case MKDATA_FORMAT_midi: midfmt=MKDATA_FORMAT_song; break;
       case MKDATA_FORMAT_wav: midfmt=MKDATA_FORMAT_binary; break;//TODO gamek sound format
       case MKDATA_FORMAT_wave: midfmt=MKDATA_FORMAT_wavebin; break;
+      case MKDATA_FORMAT_map: midfmt=MKDATA_FORMAT_mapbin; break;
       // The rest are unusual as input. Pass them thru verbatim. (font,image,song,c)
       default: midfmt=MKDATA_FORMAT_binary;
     }
@@ -376,6 +389,7 @@ static int mkdata_convert(void *dst,int dstfmt,const void *src,int srcc,int srcf
   if ((dstfmt==MKDATA_FORMAT_image)&&(srcfmt==MKDATA_FORMAT_png)) return mkdata_image_from_png(dst,src,srcc,srcpath,imgfmt);
   if ((dstfmt==MKDATA_FORMAT_song)&&(srcfmt==MKDATA_FORMAT_midi)) return mkdata_song_from_midi(dst,src,srcc,srcpath);
   if ((dstfmt==MKDATA_FORMAT_wavebin)&&(srcfmt==MKDATA_FORMAT_wave)) return mkdata_wavebin_from_wave(dst,src,srcc,srcpath);
+  if ((dstfmt==MKDATA_FORMAT_mapbin)&&(srcfmt==MKDATA_FORMAT_map)) return mkdata_mapbin_from_map(dst,src,srcc,srcpath);
   
   fprintf(stderr,"%s: No known conversion to '%s' from '%s'\n",srcpath,mkdata_format_repr(dstfmt),mkdata_format_repr(srcfmt));
   return -2;
