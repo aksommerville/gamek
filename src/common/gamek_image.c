@@ -24,6 +24,23 @@ uint32_t gamek_image_pixel_from_rgba(uint8_t fmt,uint8_t r,uint8_t g,uint8_t b,u
     #else
       case GAMEK_IMGFMT_RGBX: return r|(g<<8)|(b<<16)|(a<<24);
     #endif
+    case GAMEK_IMGFMT_BGR332: {
+        if (!a) return 0;
+        uint8_t pixel=(b&0xe0)|((g>>3)&0x1c)|(r>>6);
+        if (!pixel) return 0x20;
+        return pixel;
+      }
+  }
+  return 0;
+}
+ 
+uint32_t gamek_image_pixel_from_rgb(uint8_t fmt,uint8_t r,uint8_t g,uint8_t b) {
+  switch (fmt) {
+    #if BYTE_ORDER==BIG_ENDIAN
+      case GAMEK_IMGFMT_RGBX: return (r<<24)|(g<<16)|(b<<8)|0xff;
+    #else
+      case GAMEK_IMGFMT_RGBX: return r|(g<<8)|(b<<16)|0xff000000;
+    #endif
     case GAMEK_IMGFMT_BGR332: return (b&0xe0)|((g>>3)&0x1c)|(r>>6);
   }
   return 0;

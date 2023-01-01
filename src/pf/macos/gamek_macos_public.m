@@ -21,11 +21,15 @@ void gamek_macos_unlock_audio() {
   gamek_macos.audio_lock=0;
 }
 
-/* Terminate per client.
+/* Trivial client hooks.
  */
 
 void gamek_platform_terminate(uint8_t status) {
   macioc_terminate(status);
+}
+
+const struct gamek_image *gamek_platform_get_sample_framebuffer() {
+  return &gamek_macos.fb;
 }
 
 /* Audio requests from client.

@@ -22,7 +22,7 @@ extern const uint8_t home[];
 static struct gamek_image img_graphics={0};
 static struct gamek_map map={0};
 
-static int16_t worldw=480,worldh=256; // will update at first render
+static int16_t worldw=480,worldh=256; // Will update at init. Framebuffer size.
 
 /* herov is indexed by (playerid-1).
  * If (tileid_head) zero, it's unused.
@@ -44,8 +44,15 @@ static struct hero {
  */
 
 static int8_t hires_init() {
+
   if (gamek_image_decode(&img_graphics,graphics,0x7fffffff)<0) return -1;
   if (gamek_map_decode(&map,home)<0) return -1;
+  
+  const struct gamek_image *fb=gamek_platform_get_sample_framebuffer();
+  if (!fb) return -1;
+  worldw=fb->w;
+  worldh=fb->h;
+  
   return 0;
 }
 
@@ -181,7 +188,9 @@ static void hero_begin_dialogue(struct hero *hero) {
   int heroc=count_heroes();
   char msg[128];
   int msgc;
-  if (heroc<=1) {
+  if (!(gamek_platform_details.capabilities&GAMEK_PLATFORM_CAPABILITY_MULTIPLAYER)) {
+    msgc=fake_printf(msg,sizeof(msg),"This build only supports one player. That's me!");
+  } else if (heroc<=1) {
     msgc=fake_printf(msg,sizeof(msg),"I'm lonely. Connect more joysticks!");
   } else if (heroc<HERO_LIMIT) {
     // A better-made game would deal with the plural here.
@@ -253,11 +262,6 @@ static void hires_input_event(uint8_t playerid,uint16_t btnid,uint8_t value) {
 
 static uint8_t hires_render(struct gamek_image *fb) {
   
-  //TODO I don't yet have a way to examine the framebuffer size before the first render.
-  // Firgure something out. We ought to be setting (worldw) at init instead of here.
-  worldw=fb->w;
-  worldh=fb->h;
-  
   // Background.
   uint32_t skycolor=gamek_image_pixel_from_rgba(fb->fmt,0x80,0xc0,0xff,0xff);
   gamek_image_fill_rect(fb,0,0,fb->w,fb->h,skycolor);
@@ -265,7 +269,8 @@ static uint8_t hires_render(struct gamek_image *fb) {
   // Terrain.
   // I've arranged for maps to be exactly the size of the framebuffer.
   // Platforms can give us a different framebuffer size, and if that happens, this will get weird.
-  int16_t dsty=TILESIZE>>1;
+  const int16_t map_worldh=map.h*TILESIZE;
+  int16_t dsty=fb->h-map_worldh+(TILESIZE>>1);
   const uint8_t *mapp=map.v;
   uint8_t yi=map.h;
   for (;yi-->0;dsty+=TILESIZE) {

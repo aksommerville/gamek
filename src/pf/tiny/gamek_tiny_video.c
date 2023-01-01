@@ -210,3 +210,10 @@ void tiny_video_swap(const uint8_t *fb) {
   }
   endTransfer();
 }
+
+/* Public access to framebuffer.
+ */
+ 
+const struct gamek_image *gamek_platform_get_sample_framebuffer() {
+  return &gamek_tiny.fb;
+}

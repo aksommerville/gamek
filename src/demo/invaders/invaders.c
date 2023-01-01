@@ -686,14 +686,14 @@ static uint8_t _invaders_render(struct gamek_image *fb) {
   uint8_t i;
 
   // Background.
-  gamek_image_fill_rect(fb,0,0,fb->w,fb->h,gamek_image_pixel_from_rgba(fb->fmt,0,0,0,0xff));
+  gamek_image_fill_rect(fb,0,0,fb->w,fb->h,gamek_image_pixel_from_rgb(fb->fmt,0,0,0));
   
   // Stars.
   struct star *star=starv;
   for (i=STAR_LIMIT;i-->0;star++) {
     if (!star->pixel) {
       uint8_t luma=((star->dy-STAR_SPEED_MIN)*255)/(STAR_SPEED_MAX-STAR_SPEED_MIN+1);
-      star->pixel=gamek_image_pixel_from_rgba(fb->fmt,luma,luma,luma,0xff);
+      star->pixel=gamek_image_pixel_from_rgb(fb->fmt,luma,luma,luma);
     }
     gamek_image_fill_rect(fb,star->x>>MM_PER_PIXEL_BITS,star->y>>MM_PER_PIXEL_BITS,1,1,star->pixel);
   }

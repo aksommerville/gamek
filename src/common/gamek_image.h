@@ -83,7 +83,8 @@ void gamek_image_render_glyph(
   uint32_t pixel
 );
 
-uint32_t gamek_image_pixel_from_rgba(uint8_t fmt,uint8_t r,uint8_t g,uint8_t b,uint8_t a);
+uint32_t gamek_image_pixel_from_rgba(uint8_t fmt,uint8_t r,uint8_t g,uint8_t b,uint8_t a); // implies transparent destination
+uint32_t gamek_image_pixel_from_rgb(uint8_t fmt,uint8_t r,uint8_t g,uint8_t b); // implies opaque destination
 uint8_t gamek_image_format_pixel_size_bits(uint8_t fmt);
 
 /* Iterator.

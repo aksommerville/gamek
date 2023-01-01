@@ -248,3 +248,10 @@ void linux_video_render() {
     }
   #endif
 }
+
+/* Public access to framebuffer.
+ */
+ 
+const struct gamek_image *gamek_platform_get_sample_framebuffer() {
+  return &gamek_linux.fb;
+}

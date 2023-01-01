@@ -80,6 +80,12 @@ int32_t gamek_platform_file_read(void *dst,int32_t dsta,const char *path,int32_t
 int32_t gamek_platform_file_write_all(const char *path,const void *src,int32_t srcc);
 int32_t gamek_platform_file_write_part(const char *path,int32_t seek,const void *src,int srcc);
 
+/* You only see the real framebuffer during render.
+ * However, if you want to examine its format or dimensions at any time, you can call this.
+ * Metadata only! Do not read or write from the image! It doesn't necessarily even have pixels.
+ */
+const struct gamek_image *gamek_platform_get_sample_framebuffer();
+
 /* Client hooks.
  * These are not part of the platform.
  * Your program must define (gamek_client), populated with the hooks for things you can do.

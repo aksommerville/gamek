@@ -3,6 +3,13 @@
 struct gamek_web gamek_web={0};
 static uint8_t gamek_web_fb_storage[GAMEK_WEB_FB_LIMIT*GAMEK_WEB_FB_LIMIT*4];
 
+/* Gamek platform hooks implemented here (NB most are implemented in Javascript).
+ */
+ 
+const struct gamek_image *gamek_platform_get_sample_framebuffer() {
+  return &gamek_web.fb;
+}
+
 /* gamek_client wrappers, for the JS app to call.
  */
  

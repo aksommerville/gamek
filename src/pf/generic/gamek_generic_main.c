@@ -56,6 +56,10 @@ int32_t gamek_platform_file_write_part(const char *path,int32_t seek,const void 
   return -1;
 }
 
+const struct gamek_image *gamek_platform_get_sample_framebuffer() {
+  return &gamek_generic.fb;
+}
+
 /* Main.
  */
  
